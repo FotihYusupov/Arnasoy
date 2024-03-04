@@ -20,6 +20,10 @@ const ProductsSchema = new mongoose.Schema(
     },
     saledPrice: {
       type: Number,
+    },
+    saled: {
+      type: Boolean,
+      default: false,
     }
   },
   {

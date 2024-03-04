@@ -6,6 +6,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 const userRoutes = Router();
 
 userRoutes.get("/users", authMiddleware, userController.getAllUsers);
+userRoutes.get("/get-me", authMiddleware, userController.getMe);
 userRoutes.post("/add-user", authMiddleware, uploadMiddleware, userController.addUser);
 userRoutes.post("/login", userController.login);
 userRoutes.put("/update-user", authMiddleware, uploadMiddleware, userController.updateUser);

@@ -24,6 +24,38 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+exports.getMe = async (req, res) => {
+  try {
+    const { userId } = req.headers;
+    const { includes } = req.query;
+
+    const findUser = await User.findById(userId);
+    if(!findUser) {
+      return res.status(404).json({
+        message: "User not found",
+      })
+    }
+    let users = [findUser]
+    if (includes) {
+      const fields = includes.split(",");
+      users = users.map((user) => {
+        const filteredUser = {};
+        fields.forEach((field) => {
+          if (!user.hasOwnProperty(field)) {
+            filteredUser[field] = user[field];
+          }
+        });
+        return filteredUser;
+      });
+    }
+    return res.json({
+      data: users[0]
+    });
+  } catch (err) {
+    return res.json(err);
+  }
+}
+
 exports.addUser = async (req, res) => {
   try {
     const users = await User.find();
