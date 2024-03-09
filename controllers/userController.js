@@ -59,11 +59,12 @@ exports.getMe = async (req, res) => {
 exports.addUser = async (req, res) => {
   try {
     const users = await User.find();
+    console.log(req.images ? req.images[0] : [])
     const newUser = new User({
       id: generateId(users),
       ...req.body,
     });
-    newUser.image = req.images[0] ? req.images[0] : [];
+    newUser.image = req.images ? req.images[0] : [];
     await newUser.save();
     return res.status(201).json({ data: newUser });
   } catch (err) {
