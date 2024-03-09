@@ -29,67 +29,69 @@ const uploadFile = (req, res, next) => {
     const files = []
     const image = {}
     let convertedImageBuffer;
-    switch (format.toLowerCase()) {
-      case 'jpg':
-      case 'jpeg':
-        for(let i = 0; i < req.files.length; i++) {
-          const filename = `${Date.now()}_${i}.jpeg`;
-          convertedImageBuffer = await sharp(req.files[i].path).jpeg().toBuffer();
-          fs.writeFileSync(`${outputPath}${filename}`, convertedImageBuffer);
-          image.large = `${process.env.URL}${filename}`
-          const medium = `${Date.now()}_${i}.jpeg`;
-          convertedImageBuffer = await sharp(req.files[i].path).resize(600, 600, { fit: sharp.fit.inside, withoutEnlargement: true }).jpeg().toBuffer()
-          fs.writeFileSync(`${outputPath}${medium}`, convertedImageBuffer);
-          image.medium = `${process.env.URL}${medium}`
-          const small = `${Date.now()}_${i}.jpeg`;
-          convertedImageBuffer = await sharp(req.files[i].path).resize(300, 300, { fit: sharp.fit.inside, withoutEnlargement: true }).jpeg().toBuffer()
-          fs.writeFileSync(`${outputPath}${small}`, convertedImageBuffer);
-          image.small = `${process.env.URL}${small}`
-          files.push(image)
-          req.images = files;
-          fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
-        }
-        break;
-      case 'png':
-        for(let i = 0; i < req.files.length; i++) {
-          const filename = `${Date.now()}_${i}.png`;
-          convertedImageBuffer = await sharp(req.files[i].path).png().toBuffer();
-          fs.writeFileSync(`${outputPath}${filename}`, convertedImageBuffer);
-          image.large = `${process.env.URL}${filename}`
-          const medium = `${Date.now()}_${i}.png`;
-          convertedImageBuffer = await sharp(req.files[i].path).resize(600, 600, { fit: sharp.fit.inside, withoutEnlargement: true }).png().toBuffer()
-          fs.writeFileSync(`${outputPath}${medium}`, convertedImageBuffer);
-          image.medium = `${process.env.URL}${medium}`
-          const small = `${Date.now()}_${i}.png`;
-          convertedImageBuffer = await sharp(req.files[i].path).resize(300, 300, { fit: sharp.fit.inside, withoutEnlargement: true }).png().toBuffer()
-          fs.writeFileSync(`${outputPath}${small}`, convertedImageBuffer);
-          image.small = `${process.env.URL}${small}`
-          files.push(image)
-          req.images = files;
-          fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
-        }
-        break;
-      case 'webp':
-        for(let i = 0; i < req.files.length; i++) {
-          const filename = `${Date.now()}_${i}.webp`;
-          convertedImageBuffer = await sharp(req.files[i].path).webp().toBuffer();
-          fs.writeFileSync(`${outputPath}${filename}`, convertedImageBuffer);
-          image.large = `${process.env.URL}${filename}`
-          const medium = `${Date.now()}_${i}.webp`;
-          convertedImageBuffer = await sharp(req.files[i].path).resize(600, 600, { fit: sharp.fit.inside, withoutEnlargement: true }).webp().toBuffer()
-          fs.writeFileSync(`${outputPath}${medium}`, convertedImageBuffer);
-          image.medium = `${process.env.URL}${medium}`
-          const small = `${Date.now()}_${i}.webp`;
-          convertedImageBuffer = await sharp(req.files[i].path).resize(300, 300, { fit: sharp.fit.inside, withoutEnlargement: true }).webp().toBuffer()
-          fs.writeFileSync(`${outputPath}${small}`, convertedImageBuffer);
-          image.small = `${process.env.URL}${small}`
-          files.push(image)
-          req.images = files;
-          fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
-        }
-        break;
-      default:
-        return res.status(400).json({ error: 'Unsupported format' });
+    if(req.files) {
+      switch (format.toLowerCase()) {
+        case 'jpg':
+        case 'jpeg':
+          for(let i = 0; i < req.files.length; i++) {
+            const filename = `${Date.now()}_${i}.jpeg`;
+            convertedImageBuffer = await sharp(req.files[i].path).jpeg().toBuffer();
+            fs.writeFileSync(`${outputPath}${filename}`, convertedImageBuffer);
+            image.large = `${process.env.URL}${filename}`
+            const medium = `${Date.now()}_${i}.jpeg`;
+            convertedImageBuffer = await sharp(req.files[i].path).resize(600, 600, { fit: sharp.fit.inside, withoutEnlargement: true }).jpeg().toBuffer()
+            fs.writeFileSync(`${outputPath}${medium}`, convertedImageBuffer);
+            image.medium = `${process.env.URL}${medium}`
+            const small = `${Date.now()}_${i}.jpeg`;
+            convertedImageBuffer = await sharp(req.files[i].path).resize(300, 300, { fit: sharp.fit.inside, withoutEnlargement: true }).jpeg().toBuffer()
+            fs.writeFileSync(`${outputPath}${small}`, convertedImageBuffer);
+            image.small = `${process.env.URL}${small}`
+            files.push(image)
+            req.images = files;
+            fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
+          }
+          break;
+        case 'png':
+          for(let i = 0; i < req.files.length; i++) {
+            const filename = `${Date.now()}_${i}.png`;
+            convertedImageBuffer = await sharp(req.files[i].path).png().toBuffer();
+            fs.writeFileSync(`${outputPath}${filename}`, convertedImageBuffer);
+            image.large = `${process.env.URL}${filename}`
+            const medium = `${Date.now()}_${i}.png`;
+            convertedImageBuffer = await sharp(req.files[i].path).resize(600, 600, { fit: sharp.fit.inside, withoutEnlargement: true }).png().toBuffer()
+            fs.writeFileSync(`${outputPath}${medium}`, convertedImageBuffer);
+            image.medium = `${process.env.URL}${medium}`
+            const small = `${Date.now()}_${i}.png`;
+            convertedImageBuffer = await sharp(req.files[i].path).resize(300, 300, { fit: sharp.fit.inside, withoutEnlargement: true }).png().toBuffer()
+            fs.writeFileSync(`${outputPath}${small}`, convertedImageBuffer);
+            image.small = `${process.env.URL}${small}`
+            files.push(image)
+            req.images = files;
+            fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
+          }
+          break;
+        case 'webp':
+          for(let i = 0; i < req.files.length; i++) {
+            const filename = `${Date.now()}_${i}.webp`;
+            convertedImageBuffer = await sharp(req.files[i].path).webp().toBuffer();
+            fs.writeFileSync(`${outputPath}${filename}`, convertedImageBuffer);
+            image.large = `${process.env.URL}${filename}`
+            const medium = `${Date.now()}_${i}.webp`;
+            convertedImageBuffer = await sharp(req.files[i].path).resize(600, 600, { fit: sharp.fit.inside, withoutEnlargement: true }).webp().toBuffer()
+            fs.writeFileSync(`${outputPath}${medium}`, convertedImageBuffer);
+            image.medium = `${process.env.URL}${medium}`
+            const small = `${Date.now()}_${i}.webp`;
+            convertedImageBuffer = await sharp(req.files[i].path).resize(300, 300, { fit: sharp.fit.inside, withoutEnlargement: true }).webp().toBuffer()
+            fs.writeFileSync(`${outputPath}${small}`, convertedImageBuffer);
+            image.small = `${process.env.URL}${small}`
+            files.push(image)
+            req.images = files;
+            fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
+          }
+          break;
+        default:
+          return res.status(400).json({ error: 'Unsupported format' });
+      }
     }
     next();
   });
