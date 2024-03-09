@@ -63,7 +63,7 @@ exports.addUser = async (req, res) => {
       id: generateId(users),
       ...req.body,
     });
-    newUser.image = req.images[0];
+    newUser.image = req.images[0] ? req.images[0] : [];
     await newUser.save();
     return res.status(201).json({ data: newUser });
   } catch (err) {
