@@ -24,6 +24,13 @@ const ProductsSchema = new mongoose.Schema(
     saled: {
       type: Boolean,
       default: false,
+    },
+    deleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedAt: {
+      type: Date,
     }
   },
   {

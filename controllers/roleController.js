@@ -4,7 +4,8 @@ const generateId = require("../utils/generateId");
 exports.getAll = async (req, res) => {
   try {
     const includes = req.query.includes;
-    let roles = await Role.find({ deleted: false });    
+    let roles = await Role.find();  
+    console.log(roles)
     if (includes) {
       const fields = includes.split(",");
       roles = roles.map((role) => {

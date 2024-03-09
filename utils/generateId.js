@@ -6,6 +6,7 @@ const generateId = (items) => {
     }
     return parseInt(lastItem.id) + 1;
   } catch (err) {
+    console.log(err)
     return "Error";
   }
 };

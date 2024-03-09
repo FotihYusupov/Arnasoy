@@ -30,7 +30,7 @@ exports.getMe = async (req, res) => {
     const { includes } = req.query;
 
     const findUser = await User.findById(userId);
-    if(!findUser) {
+    if(!findUser || findUser.active === false) {
       return res.status(404).json({
         message: "User not found",
       })
@@ -67,7 +67,8 @@ exports.addUser = async (req, res) => {
     await newUser.save();
     return res.status(201).json({ data: newUser });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    console.log(err)
+    return res.json(err);
   }
 };
 
