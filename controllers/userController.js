@@ -104,7 +104,7 @@ exports.updateUser = async (req, res) => {
     return res.json({ data: updatedUser });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json(err);
   }
 };
 
