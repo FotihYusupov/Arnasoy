@@ -2,8 +2,19 @@ const Client = require("../models/Client");
 
 exports.getAll = async (req, res) => {
   try {
-    const clients = await Client.find({ deleted: false });
-    return res.json({ data: clients });
+    const clients = await Client.find({ deleted: false })
+      .skip((req.query.page - 1) * req.query.perPage)
+      .limit(req.query.perPage);
+    const total = await Client.countDocuments();
+    return res.json({
+      data: clients,
+      _meta: {
+        currentPage: +req.query.page,
+        perPage: +req.query.perPage,
+        totalCount: total,
+        pageCount: Math.ceil(total / req.query.perPage),
+      },
+    });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }

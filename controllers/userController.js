@@ -5,46 +5,11 @@ const { sign } = require("../utils/jwt");
 exports.getAllUsers = async (req, res) => {
   try {
     const { includes } = req.query;
-    let users = await User.find({ deleted: false }).populate("role").skip((req.query.page - 1) * req.query.perPage).limit(req.query.perPage);
-    const total = await User.countDocuments({});
-    console.log(total);
-    if (includes) {
-      const fields = includes.split(",");
-      users = users.map((user) => {
-        const filteredUser = {};
-        fields.forEach((field) => {
-          if (!user.hasOwnProperty(field)) {
-            filteredUser[field] = user[field];
-          }
-        });
-        return filteredUser;
-      });
-    }
-    return res.json({ 
-      data: users,
-      _meta: {
-        currentPage: req.query.page,
-        perPage: req.query.perPage,
-        totalCount: "", // get all users length not pagination
-      }
-    });
-  } catch (err) {
-    return res.status(500).json(err);
-  }
-};
-
-exports.getMe = async (req, res) => {
-  try {
-    const { userId } = req.headers;
-    const { includes } = req.query;
-
-    const findUser = await User.findById(userId);
-    if(!findUser || findUser.active === false) {
-      return res.status(404).json({
-        message: "User not found",
-      })
-    }
-    let users = [findUser]
+    let users = await User.find({ deleted: false })
+      .populate("role")
+      .skip((req.query.page - 1) * req.query.perPage)
+      .limit(req.query.perPage);
+    const total = await User.countDocuments();
     if (includes) {
       const fields = includes.split(",");
       users = users.map((user) => {
@@ -58,17 +23,55 @@ exports.getMe = async (req, res) => {
       });
     }
     return res.json({
-      data: users[0]
+      data: users,
+      _meta: {
+        currentPage: +req.query.page,
+        perPage: +req.query.perPage,
+        totalCount: total,
+        pageCount: Math.ceil(total / req.query.perPage),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    const { userId } = req.headers;
+    const { includes } = req.query;
+
+    const findUser = await User.findById(userId);
+    if (!findUser || findUser.active === false) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+    let users = [findUser];
+    if (includes) {
+      const fields = includes.split(",");
+      users = users.map((user) => {
+        const filteredUser = {};
+        fields.forEach((field) => {
+          if (!user.hasOwnProperty(field)) {
+            filteredUser[field] = user[field];
+          }
+        });
+        return filteredUser;
+      });
+    }
+    return res.json({
+      data: users[0],
     });
   } catch (err) {
     return res.json(err);
   }
-}
+};
 
 exports.addUser = async (req, res) => {
   try {
     const users = await User.find();
-    console.log(req.images ? req.images[0] : [])
+    console.log(req.images ? req.images[0] : []);
     const newUser = new User({
       id: generateId(users),
       ...req.body,
@@ -77,7 +80,7 @@ exports.addUser = async (req, res) => {
     await newUser.save();
     return res.status(201).json({ data: newUser });
   } catch (err) {
-    console.log(err)
+    console.log(err);
     return res.json(err);
   }
 };

@@ -12,6 +12,10 @@ const SatisfactionSchema = new mongoose.Schema({
   },
   price: {
     type: String,
+  },
+  parties: {
+    type: mongoose.Types.ObjectId,
+    ref: "party"
   }
 }, {
   timestamps: true,

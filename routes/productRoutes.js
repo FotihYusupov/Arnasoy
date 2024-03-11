@@ -4,8 +4,9 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const productRoutes = Router();
 
-productRoutes.get("/products/:id", productController.getAll);
+productRoutes.get("/products/:id",  authMiddleware, productController.getAll);
 productRoutes.get("/product/:id", authMiddleware, productController.findById);
-productRoutes.post("/sale", productController.SaleProduct)
+productRoutes.post("/sale", authMiddleware, productController.SaleProduct);
+productRoutes.patch("/get-price",  authMiddleware, productController.getPrice);
 
 module.exports = productRoutes;

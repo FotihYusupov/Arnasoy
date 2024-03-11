@@ -7,6 +7,7 @@ const warehouseRoutes = require("./warehouseRoutes");
 const logisticRoutes = require("./logisticRoutes");
 const partyRoutes = require("./partyRoutes");
 const productRoutes = require("./productRoutes");
+const satisfactionRoutes = require("./satisfactionRoutes");
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use(warehouseRoutes);
 router.use(logisticRoutes);
 router.use(partyRoutes);
 router.use(productRoutes);
+router.use(satisfactionRoutes);
 
 module.exports = router;
