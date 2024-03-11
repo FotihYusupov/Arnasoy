@@ -63,6 +63,7 @@ exports.addParty = async (req, res) => {
       invoice,
       invoiceDate,
       status,
+      warehouse,
       products,
     } = req.body;
     const newParty = new Party({
@@ -75,6 +76,7 @@ exports.addParty = async (req, res) => {
       invoice,
       invoiceDate,
       status,
+      warehouse,
       user: req.headers.userId,
     });
 

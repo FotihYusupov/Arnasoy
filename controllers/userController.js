@@ -91,8 +91,8 @@ exports.login = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const { userId } = req.headers;
-    let updatedUser = await User.findById(userId);
+    const { id } = req.params;
+    let updatedUser = await User.findById(id);
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }

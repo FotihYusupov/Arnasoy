@@ -9,7 +9,7 @@ userRoutes.get("/users", authMiddleware, userController.getAllUsers);
 userRoutes.get("/get-me", authMiddleware, userController.getMe);
 userRoutes.post("/add-user", authMiddleware, uploadMiddleware, userController.addUser);
 userRoutes.post("/login", userController.login);
-userRoutes.put("/update-user", authMiddleware, uploadMiddleware, userController.updateUser);
+userRoutes.put("/update-user/:id", authMiddleware, uploadMiddleware, userController.updateUser);
 userRoutes.delete("/delete-user/:id", authMiddleware, userController.deleteUser);
 
 module.exports = userRoutes;

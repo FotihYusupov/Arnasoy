@@ -4,8 +4,11 @@ const SaledProductsSchema = new mongoose.Schema({
   id: {
     type: Number
   },
-  product: {
+  products: {
     type: Array,
+  },
+  invoiceDate: {
+    type: Date,
   },
   client: {
     type: mongoose.Types.ObjectId,
@@ -14,6 +17,13 @@ const SaledProductsSchema = new mongoose.Schema({
   user: {
     type: mongoose.Types.ObjectId,
     ref: "user",
+  },
+  warehouse: {
+    type: mongoose.Types.ObjectId,
+    ref: "warehouse",
+  },
+  comment: {
+    type: String,
   },
   deleted: {
     type: Boolean,
