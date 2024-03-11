@@ -12,8 +12,7 @@ exports.getAll = async (req, res) => {
 exports.addClient = async (req, res) => {
   try {
     const newClient = new Client({
-      name: req.body.name,
-      phone: req.body.phone,
+      ...req.body,
     });
     await newClient.save();
     return res.status(201).json({ data: newClient });

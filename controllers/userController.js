@@ -5,7 +5,9 @@ const { sign } = require("../utils/jwt");
 exports.getAllUsers = async (req, res) => {
   try {
     const { includes } = req.query;
-    let users = await User.find({ deleted: false }).populate("role");
+    let users = await User.find({ deleted: false }).populate("role").skip((req.query.page - 1) * req.query.perPage).limit(req.query.perPage);
+    const total = await User.countDocuments({});
+    console.log(total);
     if (includes) {
       const fields = includes.split(",");
       users = users.map((user) => {
@@ -18,9 +20,16 @@ exports.getAllUsers = async (req, res) => {
         return filteredUser;
       });
     }
-    return res.json({ data: users });
+    return res.json({ 
+      data: users,
+      _meta: {
+        currentPage: req.query.page,
+        perPage: req.query.perPage,
+        totalCount: "", // get all users length not pagination
+      }
+    });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json(err);
   }
 };
 
