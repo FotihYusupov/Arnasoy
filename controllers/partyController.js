@@ -8,13 +8,16 @@ exports.getAll = async (req, res) => {
   try {
     const includes = req.query.includes;
     let parties;
+    const total = await Party.countDocuments();
 
     if (includes) {
       const fields = includes.split(",");
-      parties = await Party.find({ deleted: false, saled: false }).populate({
+      parties = await Party.find({ deleted: false, saled: false, warehouse: req.params.id }).populate({
         path: "products",
         match: { saled: false },
-      });
+      })
+      .skip((req.query.page - 1) * req.query.perPage)
+      .limit(req.query.perPage);
 
       parties = parties.map((party) => {
         const filteredParty = {};
@@ -24,17 +27,24 @@ exports.getAll = async (req, res) => {
         return filteredParty;
       });
     } else {
-      parties = await Party.find({ deleted: false, saled: false }).populate({
+      parties = await Party.find({ deleted: false, saled: false, warehouse: req.params.id }).populate({
         path: "products",
         match: { saled: false },
-      });
+      })
+      .skip((req.query.page - 1) * req.query.perPage)
+      .limit(req.query.perPage);
     }
 
     return res.json({
       data: parties,
+      _meta: {
+        currentPage: +req.query.page,
+        perPage: +req.query.perPage,
+        totalCount: total,
+        pageCount: Math.ceil(total / req.query.perPage),
+      },
     });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
