@@ -16,6 +16,8 @@ exports.getAll = async (req, res) => {
         path: "products",
         match: { saled: false },
       })
+      .populate("clients")
+      .populate("logistics")
       .skip((req.query.page - 1) * req.query.perPage)
       .limit(req.query.perPage);
 
@@ -31,6 +33,7 @@ exports.getAll = async (req, res) => {
         path: "products",
         match: { saled: false },
       })
+      .populate("client")
       .skip((req.query.page - 1) * req.query.perPage)
       .limit(req.query.perPage);
     }
@@ -45,7 +48,7 @@ exports.getAll = async (req, res) => {
       },
     });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error", err: err });
   }
 };
 
