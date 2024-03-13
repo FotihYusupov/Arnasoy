@@ -16,6 +16,13 @@ const SatisfactionSchema = new mongoose.Schema({
   parties: {
     type: mongoose.Types.ObjectId,
     ref: "party"
+  },
+  deleted: {
+    type: Boolean,
+    default: false
+  },
+  deletedAt: {
+    type: Date,
   }
 }, {
   timestamps: true,

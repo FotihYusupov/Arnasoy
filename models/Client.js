@@ -5,6 +5,12 @@ const ClientSchema = new mongoose.Schema(
     id: {
       type: Number,
     },
+    type: {
+      type: Number,
+    },
+    isCustomer: {
+      type: Boolean,
+    },
     name: {
       type: String,
     },
@@ -38,8 +44,15 @@ const ClientSchema = new mongoose.Schema(
     inn: {
       type: String,
     },
-    bank_account: {
+    bankAccount: {
       type: String,
+    },
+    balance: {
+      type: Number,
+      default: 0,
+    },
+    dateBirth: {
+      type: Date,
     },
     deleted: {
       type: Boolean,

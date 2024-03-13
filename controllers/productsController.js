@@ -1,8 +1,10 @@
 const Products = require("../models/Products");
 const SaledProducts = require("../models/saledProducts")
 const Party = require("../models/Party");
+const Client = require("../models/Client")
 const generateId = require("../utils/generateId");
 const Users = require("../models/User");
+const Dept = require("../models/Debt")
 const bot = require("../bot")
 
 exports.getAll = async (req, res) => {
@@ -154,6 +156,15 @@ exports.SaleProduct = async (req, res) => {
     const { products } = req.body;
     const errors = [];
     const updatedProducts = [];
+    const findClient = await Client.findById(req.body.client)
+    if(findClient.balance >= req.body.totalSum) {
+      return res.json({
+        message: "There are insufficient funds in the customer's balance."
+      })
+    } else {
+      findClient.balance = findClient.balance - req.body.totalSum
+      await findClient.save();
+    }
     for (let product of products) {
       const findProduct = await Products.findById(product.id);
       if (!findProduct) {
@@ -234,7 +245,7 @@ exports.SaleProduct = async (req, res) => {
 
     const saledProducts = await SaledProducts.find();
 
-    await SaledProducts.create({
+    const saledProduct = await SaledProducts.create({
       id: req.body.id ? req.body.id : generateId(saledProducts),
       client: req.body.client,
       warehouse: req.body.warehouse,
@@ -262,7 +273,7 @@ exports.SaleProduct = async (req, res) => {
     const users = await Users.find({ bot: true, deleted: false, active: true });
 
     users.forEach((user) => {
-      const messageText = `Chiqim.\n id: ${newParty.id}\n user: ${findUser.name} ${findUser.lastName}`;
+      const messageText = `Chiqim.\n id: ${saledProduct.id}\n user: ${findUser.name} ${findUser.lastName}`;
       if (user.chatId) {
         bot.sendMessage(parseInt(user.chatId), messageText).catch(err => {
           console.log(err)
@@ -270,10 +281,18 @@ exports.SaleProduct = async (req, res) => {
       }
     });
 
+    await Dept.create({
+      sum: req.body.totalSum,
+      saleds: saledProduct._id,
+      clients: req.body.client,
+      paid: req.body.paid ? true : false
+    })
+
     return res.status(200).json({
       message: "Products sold successfully",
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       message: "Internal server error",
       error: err.message,

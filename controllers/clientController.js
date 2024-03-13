@@ -1,4 +1,5 @@
 const Client = require("../models/Client");
+const generateId = require("../utils/generateId");
 
 exports.getAll = async (req, res) => {
   try {
@@ -22,7 +23,9 @@ exports.getAll = async (req, res) => {
 
 exports.addClient = async (req, res) => {
   try {
+    const clients = await Client.find();
     const newClient = new Client({
+      id: generateId(clients),
       ...req.body,
     });
     await newClient.save();
@@ -45,6 +48,22 @@ exports.updateClient = async (req, res) => {
     return res.json({ data: updatedClient });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.updateClientBalance = async (req, res) => {
+  try {
+    const updatedClient = await Client.findByIdAndUpdate(
+      req.params.id,
+      { balance: req.body.balance },
+      { new: true }
+    );
+    return res.json({
+      message: "Client balance updated",
+      data: updatedClient,
+    })
+  } catch (err) {
+    return res.json(err);
   }
 };
 
