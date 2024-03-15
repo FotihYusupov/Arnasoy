@@ -17,7 +17,6 @@ exports.getAll = async (req, res) => {
         match: { saled: false },
       })
       .populate("clients")
-      .populate("logistics")
       .skip((req.query.page - 1) * req.query.perPage)
       .limit(req.query.perPage);
 
@@ -101,6 +100,7 @@ exports.addParty = async (req, res) => {
       const newProduct = new Products({
         id: parseInt(generateId(lastItem)),
         ...productData,
+        warehouse: warehouse,
         parties: newParty._id,
       });
       await newProduct.save();

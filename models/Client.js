@@ -8,8 +8,13 @@ const ClientSchema = new mongoose.Schema(
     type: {
       type: Number,
     },
-    isCustomer: {
-      type: Boolean,
+    category: {
+      type: mongoose.Types.ObjectId,
+      ref: "category"
+    },
+    group: {
+      type: mongoose.Types.ObjectId,
+      ref: "group"
     },
     name: {
       type: String,

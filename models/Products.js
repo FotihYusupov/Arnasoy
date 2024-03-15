@@ -14,7 +14,11 @@ const ProductsSchema = new mongoose.Schema(
     parties: {
       type: mongoose.Types.ObjectId,
       ref: "party"
-    },    
+    },
+    warehouse: {
+      type: mongoose.Types.ObjectId,
+      ref: "warehouse"
+    } ,
     price: {
       type: Number,
     },
@@ -24,6 +28,9 @@ const ProductsSchema = new mongoose.Schema(
     saled: {
       type: Boolean,
       default: false,
+    },
+    saledAmount: {
+      type: Number
     },
     deleted: {
       type: Boolean,

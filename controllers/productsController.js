@@ -1,16 +1,16 @@
 const Products = require("../models/Products");
-const SaledProducts = require("../models/saledProducts")
+const SaledProducts = require("../models/saledProducts");
 const Party = require("../models/Party");
-const Client = require("../models/Client")
-const generateId = require("../utils/generateId");
+const Client = require("../models/Client");
 const Users = require("../models/User");
-const Dept = require("../models/Debt")
-const bot = require("../bot")
+const Dept = require("../models/Debt");
+const generateId = require("../utils/generateId");
+const bot = require("../bot");
 
 exports.getAll = async (req, res) => {
   try {
     const { includes, search } = req.query;
-    const { id } = req.params
+    const { id } = req.params;
     let products = await Products.find().populate("parties");
     products = products.filter((e) => e.parties.warehouse == id);
     if (search) {
@@ -72,18 +72,18 @@ exports.getPrice = async (req, res) => {
         continue;
       }
       if (findProduct.amount > product.amount) {
-        findProduct.saledAmount = product.amount
+        findProduct.saledAmount = product.amount;
         findProduct.amount = findProduct.amount - product.amount;
         findProduct.saledPrice = product.saledPrice;
         updatedProducts.push(findProduct);
       } else if (findProduct.amount == product.amount) {
-        findProduct.saledAmount = product.amount
+        findProduct.saledAmount = product.amount;
         findProduct.amount = 0;
         findProduct.saledPrice = product.saledPrice;
         findProduct.saled = true;
         updatedProducts.push(findProduct);
       } else if (findProduct.amount < product.amount) {
-        findProduct.saledAmount = findProduct.amount
+        findProduct.saledAmount = findProduct.amount;
         const ids = [];
         let amount = product.amount - findProduct.amount;
         findProduct.amount = 0;
@@ -91,7 +91,7 @@ exports.getPrice = async (req, res) => {
         findProduct.saledPrice = product.saledPrice;
         updatedProducts.push(findProduct);
         ids.push(findProduct._id);
-        for(let i = 0; i < ids.length; i++) {
+        for (let i = 0; i < ids.length; i++) {
           let newProducts = await Products.find({ _id: { $nin: ids } });
           newProducts = [...new Set(newProducts.map((p) => p.name))].map(
             (name) => newProducts.find((p) => p.name === name)
@@ -99,23 +99,23 @@ exports.getPrice = async (req, res) => {
           const newFindProduct = newProducts.find(
             (e) => e.name === findProduct.name
           );
-          if(newFindProduct) {
+          if (newFindProduct) {
             if (newFindProduct.amount > amount) {
-              newFindProduct.saledAmount = amount
+              newFindProduct.saledAmount = amount;
               newFindProduct.amount = newFindProduct.amount - amount;
               amount = 0;
               newFindProduct.saledPrice = product.saledPrice;
               updatedProducts.push(newFindProduct);
             } else if (newFindProduct.amount == amount) {
-              newFindProduct.saledAmount = amount
+              newFindProduct.saledAmount = amount;
               newFindProduct.amount = 0;
               findProduct.saled = true;
               amount = 0;
               newFindProduct.saledPrice = product.saledPrice;
               updatedProducts.push(newFindProduct);
             } else if (newFindProduct.amount < amount) {
-              newFindProduct.saledAmount = newFindProduct.amount
-              amount = amount - newFindProduct.amount
+              newFindProduct.saledAmount = newFindProduct.amount;
+              amount = amount - newFindProduct.amount;
               newFindProduct.amount = 0;
               newFindProduct.saled = true;
               amount = amount - newFindProduct.amount;
@@ -124,7 +124,7 @@ exports.getPrice = async (req, res) => {
               updatedProducts.push(newFindProduct);
             }
           } else {
-            break
+            break;
           }
         }
       } else {
@@ -139,32 +139,25 @@ exports.getPrice = async (req, res) => {
       });
     }
 
-    let sum = 0
+    let sum = 0;
     for (product of updatedProducts) {
-      sum += product.saledAmount * product.price
+      sum += product.saledAmount * product.price;
     }
     res.json({
-      data: sum
-    })
+      data: sum,
+    });
   } catch (err) {
-    return res.json(err)
+    return res.json(err);
   }
-}
+};
 
 exports.SaleProduct = async (req, res) => {
   try {
     const { products } = req.body;
     const errors = [];
     const updatedProducts = [];
-    const findClient = await Client.findById(req.body.client)
-    if(findClient.balance >= req.body.totalSum) {
-      return res.json({
-        message: "There are insufficient funds in the customer's balance."
-      })
-    } else {
-      findClient.balance = findClient.balance - req.body.totalSum
-      await findClient.save();
-    }
+    const findClient = await Client.findById(req.body.client);
+
     for (let product of products) {
       const findProduct = await Products.findById(product.id);
       if (!findProduct) {
@@ -172,18 +165,19 @@ exports.SaleProduct = async (req, res) => {
         continue;
       }
       if (findProduct.amount > product.amount) {
-        findProduct.saledAmount = product.amount
+        console.log(product.amount);
+        findProduct.saledAmount = product.amount;
         findProduct.amount = findProduct.amount - product.amount;
         findProduct.saledPrice = product.saledPrice;
         updatedProducts.push(findProduct);
       } else if (findProduct.amount == product.amount) {
-        findProduct.saledAmount = product.amount
+        findProduct.saledAmount = product.amount;
         findProduct.amount = 0;
         findProduct.saledPrice = product.saledPrice;
         findProduct.saled = true;
         updatedProducts.push(findProduct);
       } else if (findProduct.amount < product.amount) {
-        findProduct.saledAmount = product.amount
+        findProduct.saledAmount = product.amount;
         const ids = [];
         let amount = product.amount - findProduct.amount;
         findProduct.amount = 0;
@@ -191,7 +185,7 @@ exports.SaleProduct = async (req, res) => {
         findProduct.saledPrice = product.saledPrice;
         updatedProducts.push(findProduct);
         ids.push(findProduct._id);
-        for(let i = 0; i < ids.length; i++) {
+        for (let i = 0; i < ids.length; i++) {
           let newProducts = await Products.find({ _id: { $nin: ids } });
           newProducts = [...new Set(newProducts.map((p) => p.name))].map(
             (name) => newProducts.find((p) => p.name === name)
@@ -199,23 +193,23 @@ exports.SaleProduct = async (req, res) => {
           const newFindProduct = newProducts.find(
             (e) => e.name === findProduct.name
           );
-          if(newFindProduct) {
+          if (newFindProduct) {
             if (newFindProduct.amount > amount) {
-              newFindProduct.saledAmount = amount
+              newFindProduct.saledAmount = amount;
               newFindProduct.amount = newFindProduct.amount - amount;
               amount = 0;
               newFindProduct.saledPrice = product.saledPrice;
               updatedProducts.push(newFindProduct);
             } else if (newFindProduct.amount == amount) {
-              newFindProduct.saledAmount = amount
+              newFindProduct.saledAmount = amount;
               newFindProduct.amount = 0;
               findProduct.saled = true;
               amount = 0;
               newFindProduct.saledPrice = product.saledPrice;
               updatedProducts.push(newFindProduct);
             } else if (newFindProduct.amount < amount) {
-              newFindProduct.saledAmount = amount
-              amount = amount - newFindProduct.amount
+              newFindProduct.saledAmount = amount;
+              amount = amount - newFindProduct.amount;
               newFindProduct.amount = 0;
               newFindProduct.saled = true;
               amount = amount - newFindProduct.amount;
@@ -224,7 +218,7 @@ exports.SaleProduct = async (req, res) => {
               updatedProducts.push(newFindProduct);
             }
           } else {
-            break
+            break;
           }
         }
       } else {
@@ -239,12 +233,7 @@ exports.SaleProduct = async (req, res) => {
       });
     }
 
-    for (updated of updatedProducts) {
-      await updated.save();
-    }
-
     const saledProducts = await SaledProducts.find();
-
     const saledProduct = await SaledProducts.create({
       id: req.body.id ? req.body.id : generateId(saledProducts),
       client: req.body.client,
@@ -252,8 +241,36 @@ exports.SaleProduct = async (req, res) => {
       invoiceDate: req.body.invoiceDate,
       comment: req.body.comment,
       user: req.headers.userId,
-      products: updatedProducts
-    })
+      products: updatedProducts,
+    });
+
+    if (req.body.dept) {
+      if (findClient.balance >= req.body.totalSum) {
+        findClient.balance = findClient.balance - req.body.totalSum;
+        await findClient.save();
+      } else if (findClient.balance < req.body.totalSum) {
+        findClient.balance = 0;
+        req.body.totalSum = req.body.totalSum - findClient.balance;
+        await findClient.save();
+        await Dept.create({
+          sum: req.body.totalSum,
+          saleds: saledProduct._id,
+          clients: req.body.client,
+        });
+      }
+    } else {
+      if (findClient.balance < req.body.totalSum) {
+        return res.json({
+          message: "There are not enough funds in the client's balance",
+        });
+      }
+      findClient.balance = findClient.balance - req.body.totalSum;
+      await findClient.save();
+    }
+
+    for (let updated of updatedProducts) {
+      await updated.save();
+    }
 
     const parties = await Party.find({ deleted: false, saled: false }).populate(
       {
@@ -275,18 +292,11 @@ exports.SaleProduct = async (req, res) => {
     users.forEach((user) => {
       const messageText = `Chiqim.\n id: ${saledProduct.id}\n user: ${findUser.name} ${findUser.lastName}`;
       if (user.chatId) {
-        bot.sendMessage(parseInt(user.chatId), messageText).catch(err => {
-          console.log(err)
+        bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {
+          console.log(err);
         });
       }
     });
-
-    await Dept.create({
-      sum: req.body.totalSum,
-      saleds: saledProduct._id,
-      clients: req.body.client,
-      paid: req.body.paid ? true : false
-    })
 
     return res.status(200).json({
       message: "Products sold successfully",
@@ -297,5 +307,58 @@ exports.SaleProduct = async (req, res) => {
       message: "Internal server error",
       error: err.message,
     });
+  }
+};
+
+exports.transfer = async (req, res) => {
+  try {
+    const newProducts = [];
+    for (product of req.body.products) {
+      const findProduct = await Products.findById(product.id);
+      if (findProduct.amount == product.amount) {
+        findProduct.warehouse = product.warehouse;
+        newProducts.push(findProduct);
+      } else if (findProduct.amount > product.amount) {
+        findProduct.warehouse = product.warehouse;
+        newProducts.push(findProduct);
+      } else {
+        return res.status(500).json({
+          message: "The transfer amount is more than the product amount",
+        });
+      }
+    }
+
+    for (product of newProducts) {
+      await product.save();
+    }
+
+    return res.json({
+      message: "The products have been transferred successfully.",
+    });
+  } catch (err) {
+    return res.json(err);
+  }
+};
+
+exports.destruction = async (req, res) => {
+  try {
+    const findProduct = await Products.findById(req.body.id);
+    if (findProduct.amount == req.body.amount) {
+      findProduct.deleted = true;
+      findProduct.deletedAt = new Date();
+      await findProduct.save();
+    } else if (findProduct.amount > req.body.amount) {
+      findProduct.amount -= req.body.amount;
+      await findProduct.save();
+    } else {
+      return res.status(500).json({
+        message: "The transfer amount is more than the product amount",
+      });
+    }
+    return res.json({
+      message: "The products have been deleted successfully",
+    });
+  } catch (err) {
+    return res.json(err);
   }
 };
