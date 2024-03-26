@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
+const { Router } = require('express')
 const productCategoryController = require('../controllers/productCategoryController');
 const authMiddleware = require('../middlewares/auth.middleware');
+
+const router = Router();
 
 router.get('/product-categories', authMiddleware, productCategoryController.read);
 router.post('/add-product-category', authMiddleware, productCategoryController.create);
