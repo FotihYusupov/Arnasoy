@@ -1,6 +1,5 @@
 const Category = require("../models/Category");
 
-// Create
 exports.create = async (req, res) => {
   try {
     const { name } = req.body;
@@ -11,7 +10,6 @@ exports.create = async (req, res) => {
   }
 };
 
-// Read
 exports.read = async (req, res) => {
   try {
     const categories = await Category.find({ deleted: false });
@@ -21,7 +19,6 @@ exports.read = async (req, res) => {
   }
 };
 
-// Update
 exports.update = async (req, res) => {
   try {
     const { id } = req.params;
@@ -37,7 +34,6 @@ exports.update = async (req, res) => {
   }
 };
 
-// Delete
 exports.delete = async (req, res) => {
   try {
     const { id } = req.params;

@@ -101,6 +101,7 @@ exports.addParty = async (req, res) => {
         id: parseInt(generateId(lastItem)),
         ...productData,
         warehouse: warehouse,
+        dept: req.body.dept,
         parties: newParty._id,
       });
       await newProduct.save();

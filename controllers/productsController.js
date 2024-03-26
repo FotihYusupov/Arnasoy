@@ -31,6 +31,38 @@ exports.getAll = async (req, res) => {
         return filteredProduct;
       });
     }
+    res.json({
+      data: products,
+    });
+  } catch (err) {
+    return res.json(err);
+  }
+};
+
+exports.getUniqueProducts = async (req, res) => {
+  try {
+    const { includes, search } = req.query;
+    const { id } = req.params;
+    let products = await Products.find().populate("parties");
+    products = products.filter((e) => e.parties.warehouse == id);
+    if (search) {
+      const regex = new RegExp(search, "i");
+      products = products.filter((product) => {
+        return regex.test(product.name);
+      });
+    }
+    if (includes) {
+      const fields = includes.split(",");
+      products = products.map((product) => {
+        const filteredProduct = {};
+        fields.forEach((field) => {
+          if (!product.hasOwnProperty(field)) {
+            filteredProduct[field] = product[field];
+          }
+        });
+        return filteredProduct;
+      });
+    }
     products.sort((a, b) => a.createdAt - b.createdAt);
     products = [...new Set(products.map((p) => p.name))].map((name) =>
       products.find((p) => p.name === name)
@@ -47,7 +79,7 @@ exports.findById = async (req, res) => {
   try {
     const { id } = req.params;
     const findProduct = await Products.findById(id).populate("parties");
-    if (findProduct) {
+    if (!findProduct) {
       return res.status(404).json({
         message: "Product not found",
       });
@@ -63,6 +95,11 @@ exports.findById = async (req, res) => {
 exports.getPrice = async (req, res) => {
   try {
     const { products } = req.body;
+    if (!products) {
+      return res.json(500).json({
+        message: "Products is not defined",
+      });
+    }
     const errors = [];
     const updatedProducts = [];
     for (let product of products) {
@@ -198,14 +235,12 @@ exports.SaleProduct = async (req, res) => {
               newFindProduct.saledAmount = amount;
               newFindProduct.amount = newFindProduct.amount - amount;
               amount = 0;
-              newFindProduct.saledPrice = product.saledPrice;
               updatedProducts.push(newFindProduct);
             } else if (newFindProduct.amount == amount) {
               newFindProduct.saledAmount = amount;
               newFindProduct.amount = 0;
               findProduct.saled = true;
               amount = 0;
-              newFindProduct.saledPrice = product.saledPrice;
               updatedProducts.push(newFindProduct);
             } else if (newFindProduct.amount < amount) {
               newFindProduct.saledAmount = amount;
@@ -214,7 +249,6 @@ exports.SaleProduct = async (req, res) => {
               newFindProduct.saled = true;
               amount = amount - newFindProduct.amount;
               ids.push(newFindProduct._id);
-              newFindProduct.saledPrice = product.saledPrice;
               updatedProducts.push(newFindProduct);
             }
           } else {
@@ -252,6 +286,9 @@ exports.SaleProduct = async (req, res) => {
         findClient.balance = 0;
         req.body.totalSum = req.body.totalSum - findClient.balance;
         await findClient.save();
+        req.body.totalSum = req.body.paid
+          ? req.body.totalSum - req.body.paid
+          : req.body.totalSum;
         await Dept.create({
           sum: req.body.totalSum,
           saleds: saledProduct._id,
@@ -314,11 +351,26 @@ exports.transfer = async (req, res) => {
   try {
     const newProducts = [];
     for (product of req.body.products) {
+      console.log(product);
       const findProduct = await Products.findById(product.id);
       if (findProduct.amount == product.amount) {
         findProduct.warehouse = product.warehouse;
+        const history = {
+          warehouse: product.warehouse,
+          createdAt: new Date(),
+        };
+        findProduct.history.push(history);
+        findProduct.amount = 0;
+        findProduct.transfer = product.amount 
         newProducts.push(findProduct);
       } else if (findProduct.amount > product.amount) {
+        const history = {
+          warehouse: product.warehouse,
+          createdAt: new Date(),
+        };
+        findProduct.transfer = product.amount 
+        findProduct.amount = findProduct.amount - product.amount;
+        findProduct.history.push(history);
         findProduct.warehouse = product.warehouse;
         newProducts.push(findProduct);
       } else {
@@ -329,13 +381,19 @@ exports.transfer = async (req, res) => {
     }
 
     for (product of newProducts) {
-      await product.save();
+      await product.save()
+      const products = await Products.find();
+      const { _id, ...productData } = product._doc;
+      productData.id = generateId(products);
+      productData.amount = product.transfer
+      await Products.create(productData);
     }
 
     return res.json({
       message: "The products have been transferred successfully.",
     });
   } catch (err) {
+    console.log(err);
     return res.json(err);
   }
 };

@@ -45,9 +45,13 @@ exports.addRole = async (req, res) => {
 exports.updateRole = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(id);
+
+    const { _id, ...updateData } = req.body;
+
     const updatedRole = await Role.findByIdAndUpdate(
       id,
-      { ...req.body },
+      updateData,
       { new: true }
     );
     if (!updatedRole) {
@@ -59,9 +63,11 @@ exports.updateRole = async (req, res) => {
       data: updatedRole,
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 exports.deleteRole = async (req, res) => {
   try {
