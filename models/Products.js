@@ -24,6 +24,7 @@ const ProductsSchema = new mongoose.Schema(
     },
     saledPrice: {
       type: Number,
+      default: 0
     },
     saled: {
       type: Boolean,

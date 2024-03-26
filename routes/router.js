@@ -9,6 +9,7 @@ const productRoutes = require("./productRoutes");
 const satisfactionRoutes = require("./satisfactionRoutes");
 const deptRoutes = require("./deptRoutes");
 const groupRoutes = require("./groupRoutes");
+const productCategory = require("./productCategoryRoutes");
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use(productRoutes);
 router.use(satisfactionRoutes);
 router.use(deptRoutes);
 router.use(groupRoutes);
+router.use(productCategory);
 
 module.exports = router;
