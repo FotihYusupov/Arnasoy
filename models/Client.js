@@ -8,6 +8,9 @@ const ClientSchema = new mongoose.Schema(
     type: {
       type: Number,
     },
+    clientType: {
+      type: Number
+    },
     category: {
       type: mongoose.Types.ObjectId,
       ref: "category"
