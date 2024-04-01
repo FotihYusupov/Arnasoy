@@ -31,11 +31,6 @@ const PartySchema = new mongoose.Schema({
   departureDate: {
     type: Date,
   },
-  logistic: {
-    type: mongoose.Types.ObjectId,
-    ref: "logistic",
-    required: true,
-  },
   transportNumber: {
     type: String,
   },
@@ -58,10 +53,19 @@ const PartySchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  totalSum: {
+    type: Number,
+    required: true
+  },
   products: [{
     type: mongoose.Types.ObjectId,
     ref: "product"
   }],
+  paymentType: {
+    type: Number,
+    required: true,
+    default: 1,
+  },
   deleted: {
     type: Boolean,
     default: false,

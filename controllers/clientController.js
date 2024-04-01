@@ -1,4 +1,6 @@
 const Client = require("../models/Client");
+const Users = require("../models/User");
+const BalanceHistory = require("../models/BalanceHistory");
 const generateId = require("../utils/generateId");
 
 exports.getAll = async (req, res) => {
@@ -55,15 +57,62 @@ exports.updateClientBalance = async (req, res) => {
   try {
     const updatedClient = await Client.findByIdAndUpdate(
       req.params.id,
-      { balance: req.body.balance },
+      { balance: req.body.amount },
       { new: true }
     );
+    await BalanceHistory.create({
+      ...req.body,
+    });
     return res.json({
       message: "Client balance updated",
       data: updatedClient,
-    })
+    });
   } catch (err) {
     return res.json(err);
+  }
+};
+
+exports.moneyOut = async (req, res) => {
+  try {
+    const findClient = await Client.findById(req.params.id);
+    const findUser = await Users.findById(req.headers.userId);
+    const paymentType = req.body.paymentType;
+
+    if (paymentType == 2) {
+      if (findUser.cardBalance >= sum) {
+        findUser.cardBalance -= sum;
+        await findUser.save();
+      } else {
+        return res.json({
+          message: "You don't have enough funds in your balance",
+        });
+      }
+    } else if (paymentType == 3) {
+      if (findUser.cashBalance >= sum) {
+        findUser.cashBalance -= sum;
+        await findUser.save();
+      } else {
+        return res.json({
+          message: "You don't have enough funds in your balance",
+        });
+      }
+    } else if (paymentType == 4) {
+      if (findUser.balance >= sum) {
+        findUser.balance -= sum;
+        await findUser.save();
+      }
+    } else {
+      return res.json({
+        message: "You don't have enough funds in your balance",
+      });
+    }
+    findClient.indebtedness -= req.body.sum;
+    await findClient.save();
+    return res.json({
+      message: "Success",
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 

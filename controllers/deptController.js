@@ -1,9 +1,10 @@
 const Dept = require("../models/Debt");
 const Client = require("../models/Client");
+const Users = require("../models/User");
 
 exports.getById = async (req, res) => {
   try {
-    const dept = await Dept.find({ clients: req.params.id });
+    const dept = await Dept.find({ clients: req.params.id }).populate('saleds');
     return res.json({
       data: dept,
     });
@@ -19,6 +20,21 @@ exports.checkDept = async (req, res) => {
     let dept = await Dept.find();
     dept = dept.reverse();
     const findDept = dept.find((e) => e.clients == req.params.id);
+
+    const findUser = await Users.findById(req.headers.userId);
+    const paymentType = req.body.paymentType;
+
+    if (paymentType == 2) {
+      findUser.cardBalance += sum;
+      await findUser.save();
+    } else if (paymentType == 3) {
+      findUser.cashBalance += sum;
+      await findUser.save();
+    } else if (paymentType == 4) {
+      findUser.balance += sum;
+      await findUser.save();
+    }
+
     if (findDept.sum < sum) {
       sum = sum - findDept.sum;
       findDept.sum = 0;
@@ -42,7 +58,7 @@ exports.checkDept = async (req, res) => {
           }
         } else {
           const findClient = await Client.findById(req.params.id);
-          findClient.sum = findClient.sum + sum;
+          findClient.balance = findClient.balance + sum;
           await findClient.save();
           break;
         }
@@ -54,13 +70,15 @@ exports.checkDept = async (req, res) => {
       findDept.sum = 0;
       updated.push(findDept);
     }
+
     for (dept of updated) {
       if (dept.sum > 0) {
         dept.paid = true;
       }
       await dept.save();
     }
-    res.json("hello");
+
+    res.json("Success");
   } catch (err) {
     return res.json(err);
   }

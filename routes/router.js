@@ -10,6 +10,8 @@ const satisfactionRoutes = require("./satisfactionRoutes");
 const deptRoutes = require("./deptRoutes");
 const groupRoutes = require("./groupRoutes");
 const productCategory = require("./productCategoryRoutes");
+const balanceHistory = require("./balanceHistoryRoutes");
+const categoryRoutes = require("./categoryRoutes");
 
 const router = Router();
 
@@ -24,5 +26,7 @@ router.use(satisfactionRoutes);
 router.use(deptRoutes);
 router.use(groupRoutes);
 router.use(productCategory);
+router.use(balanceHistory);
+router.use(categoryRoutes);
 
 module.exports = router;

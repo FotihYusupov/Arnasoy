@@ -28,9 +28,6 @@ const ClientSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
     },
-    pateBirth: {
-      type: Date,
-    },
     companyName: {
       type: String,
     },
@@ -59,8 +56,12 @@ const ClientSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    indebtedness: {
+      type: Number,
+      default: 0
+    },
     dateBirth: {
-      type: Date,
+      type: Number,
     },
     deleted: {
       type: Boolean,

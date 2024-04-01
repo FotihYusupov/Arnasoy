@@ -72,6 +72,18 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    balance: {
+      type: Number,
+      default: 0
+    },
+    cashBalance: {
+      type: Number,
+      default: 0
+    },
+    cardBalance: {
+      type: Number,
+      default: 0
+    },
     deleted: {
       type: Boolean,
       default: false,

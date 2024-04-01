@@ -1,6 +1,7 @@
 const Party = require("../models/Party");
 const Users = require("../models/User");
 const Products = require("../models/Products");
+const Clients = require("../models/Client")
 const generateId = require("../utils/generateId");
 const bot = require("../bot");
 
@@ -77,7 +78,9 @@ exports.addParty = async (req, res) => {
       status,
       warehouse,
       products,
+      total,
     } = req.body;
+
     const newParty = new Party({
       id,
       client,
@@ -89,10 +92,15 @@ exports.addParty = async (req, res) => {
       invoiceDate,
       status,
       warehouse,
+      totalSum: total,
       user: req.headers.userId,
     });
 
     await newParty.save();
+
+    const findClient = await Clients.findById(client)
+    findClient.indebtedness += total
+    await findClient.save()
 
     const productIds = [];
     for (let productData of products) {
@@ -110,6 +118,7 @@ exports.addParty = async (req, res) => {
 
     newParty.products = productIds;
     await newParty.save();
+
     const findUser = await Users.findById(req.headers.userId);
     const users = await Users.find({ bot: true, deleted: false, active: true });
 
@@ -126,7 +135,7 @@ exports.addParty = async (req, res) => {
       data: newParty,
     });
   } catch (err) {
-    console.log(err);
+    console.log(err)
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
