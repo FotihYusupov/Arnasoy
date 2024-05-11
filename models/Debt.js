@@ -10,7 +10,7 @@ const DeptSchema = new mongoose.Schema(
     },
     saleds: {
       type: mongoose.Types.ObjectId,
-      ref: "saleds",
+      ref: "saled",
     },
     clients: {
       type: mongoose.Types.ObjectId,

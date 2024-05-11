@@ -1,4 +1,4 @@
-const { Schema, model } = require("mongoose");
+const { Schema, model, Types } = require("mongoose");
 
 const ProductCategorySchema = new Schema({
   name: {
@@ -7,13 +7,14 @@ const ProductCategorySchema = new Schema({
     unique: true
   },
   unit: {
-    type: Number,
+    type: Types.ObjectId,
+    ref: 'units'
   },
-  output: {
+  saledPrice: {
     type: Number,
     default: 0
   },
-  input: {
+  price: {
     type: Number,
     default: 0
   },

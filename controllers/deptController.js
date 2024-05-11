@@ -4,7 +4,7 @@ const Users = require("../models/User");
 
 exports.getById = async (req, res) => {
   try {
-    const dept = await Dept.find({ clients: req.params.id }).populate('saleds');
+    const dept = await Dept.find({ clients: req.params.id, deleted: false, paid: false }).populate('saleds');
     return res.json({
       data: dept,
     });
@@ -20,8 +20,9 @@ exports.checkDept = async (req, res) => {
     let dept = await Dept.find();
     dept = dept.reverse();
     const findDept = dept.find((e) => e.clients == req.params.id);
-
+    console.log(req.headers.userId);
     const findUser = await Users.findById(req.headers.userId);
+    console.log(findUser);
     const paymentType = req.body.paymentType;
 
     if (paymentType == 2) {

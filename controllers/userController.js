@@ -88,6 +88,7 @@ exports.addUser = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { login, password } = req.body;
+    console.log(login,password);
     const user = await User.findOne({ login, password }).populate("role");
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -117,6 +118,100 @@ exports.updateUser = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json(err);
+  }
+};
+
+const updateRecipientBalance = (type, amount, recipient) => {
+  if (type == 2) {
+    recipient.cardBalance = recipient.cardBalance + amount;
+    return recipient;
+  } else if (type == 3) {
+    recipient.cashBalance = recipient.cashBalance + amount;
+    return recipient;
+  } else if (type == 4) {
+    recipient.balance = recipient.balance + amount;
+    return recipient;
+  }
+};
+
+exports.updateUserBalance = async (req, res) => {
+  try {
+    const senderType = req.body.senderPaymentType;
+    const recipientType = req.body.recipientPaymentType;
+    const amount = parseInt(req.body.amount);
+
+    const sender = await User.findById(req.body.sender);
+    if (!sender) {
+      return res.status(404).json({
+        message: "Sender not found",
+      });
+    }
+
+    const recipient = await User.findById(req.body.recipient);
+    if (!recipient) {
+      return res.status(404).json({
+        message: "Recipient not found",
+      });
+    }
+
+    if (senderType == 2) {
+      if (sender.cardBalance < amount) {
+        return res.json({
+          message: "There are insufficient funds in the payer's balance",
+        });
+      }
+      sender.cardBalance = sender.cardBalance - amount;
+      await sender.save();
+      const updatedRecipient = updateRecipientBalance(
+        recipientType,
+        amount,
+        recipient
+      );
+      updatedRecipient.save();
+      return res.json({
+        message: "Success",
+      });
+    } else if (senderType == 3) {
+      if (sender.cashBalance < amount) {
+        return res.json({
+          message: "There are insufficient funds in the payer's balance",
+        });
+      }
+      sender.cashBalance = sender.cashBalance - amount;
+      await sender.save();
+      const updatedRecipient = updateRecipientBalance(
+        recipientType,
+        amount,
+        recipient
+      );
+      updatedRecipient.save();
+      return res.json({
+        message: "Success",
+      });
+    } else if (senderType == 4) {
+      if (sender.balance < amount) {
+        return res.json({
+          message: "There are insufficient funds in the payer's balance",
+        });
+      }
+      sender.balance = sender.balance - amount;
+      await sender.save();
+      const updatedRecipient = updateRecipientBalance(
+        recipientType,
+        amount,
+        recipient
+      );
+      updatedRecipient.save();
+      return res.json({
+        message: "Success",
+      });
+    }
+
+    return res.json({
+      message: "Error",
+    });
+  } catch (err) {
+    return res.json(err);
   }
 };
 

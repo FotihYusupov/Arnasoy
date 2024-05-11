@@ -12,6 +12,7 @@ const groupRoutes = require("./groupRoutes");
 const productCategory = require("./productCategoryRoutes");
 const balanceHistory = require("./balanceHistoryRoutes");
 const categoryRoutes = require("./categoryRoutes");
+const unitRoutes = require("./unitRoutes");
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use(groupRoutes);
 router.use(productCategory);
 router.use(balanceHistory);
 router.use(categoryRoutes);
+router.use(unitRoutes);
 
 module.exports = router;

@@ -15,6 +15,10 @@ const ProductsSchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: "party",
     },
+    unit: {
+      type: mongoose.Types.ObjectId,
+      ref: "unit"
+    },
     warehouse: {
       type: mongoose.Types.ObjectId,
       ref: "warehouse",

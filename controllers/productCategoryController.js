@@ -2,8 +2,8 @@ const ProductCategory = require('../models/productCategory');
 
 exports.create = async (req, res) => {
   try {
-    const { name, unit, output, input } = req.body;
-    const newProductCategory = await ProductCategory.create({ name, unit, output, input });
+    const { name, unit, saledPrice, price } = req.body;
+    const newProductCategory = await ProductCategory.create({ name, unit, saledPrice, price });
     res.status(201).json({ data: newProductCategory });
   } catch (error) {
     res.status(500).json({ data: null, message: error.message });
@@ -12,7 +12,7 @@ exports.create = async (req, res) => {
 
 exports.read = async (req, res) => {
   try {
-    const productCategories = await ProductCategory.find();
+    const productCategories = await ProductCategory.find().populate('unit');
     res.status(200).json({ data: productCategories });
   } catch (error) {
     res.status(500).json({ data: null, message: error.message });
