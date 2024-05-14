@@ -20,9 +20,7 @@ exports.checkDept = async (req, res) => {
     let dept = await Dept.find();
     dept = dept.reverse();
     const findDept = dept.find((e) => e.clients == req.params.id);
-    console.log(req.headers.userId);
     const findUser = await Users.findById(req.headers.userId);
-    console.log(findUser);
     const paymentType = req.body.paymentType;
 
     if (paymentType == 2) {

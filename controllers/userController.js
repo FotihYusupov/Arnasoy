@@ -71,7 +71,6 @@ exports.getMe = async (req, res) => {
 exports.addUser = async (req, res) => {
   try {
     const users = await User.find();
-    console.log(req.images ? req.images[0] : []);
     const newUser = new User({
       id: generateId(users),
       ...req.body,
@@ -88,7 +87,6 @@ exports.addUser = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { login, password } = req.body;
-    console.log(login,password);
     const user = await User.findOne({ login, password }).populate("role");
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
