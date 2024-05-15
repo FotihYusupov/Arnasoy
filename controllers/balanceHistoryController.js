@@ -18,7 +18,7 @@ exports.getById = async (req, res) => {
     }
 
     const history = await BalanceHistory.find(query).populate('user');
-    res.json(history);
+    return res.json(history);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal server error" });
