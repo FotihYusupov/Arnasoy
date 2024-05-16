@@ -4,8 +4,8 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const satisfactionRoutes = Router();
 
-satisfactionRoutes.get("/satisfactions", authMiddleware, satisfactionController.getAll);
-satisfactionRoutes.post("/add-satisfaction", authMiddleware, satisfactionController.addSatisfaction);
-satisfactionRoutes.delete("/delete-satisfaction/:id", authMiddleware, satisfactionController.cancelSatisfaction);
+satisfactionRoutes.get("/", authMiddleware, satisfactionController.getAll);
+satisfactionRoutes.post("/", authMiddleware, satisfactionController.addSatisfaction);
+satisfactionRoutes.delete("/:id", authMiddleware, satisfactionController.cancelSatisfaction);
 
 module.exports = satisfactionRoutes;

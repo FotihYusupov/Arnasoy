@@ -16,19 +16,19 @@ const unitRoutes = require("./unitRoutes");
 
 const router = Router();
 
-router.use(roleRoutes);
-router.use(userRoutes);
-router.use(currencyRoutes);
-router.use(clientRoutes);
-router.use(warehouseRoutes);
-router.use(partyRoutes);
-router.use(productRoutes);
-router.use(satisfactionRoutes);
-router.use(deptRoutes);
-router.use(groupRoutes);
-router.use(productCategory);
-router.use(balanceHistory);
-router.use(categoryRoutes);
-router.use(unitRoutes);
+router.use('/roles', roleRoutes);
+router.use('/users', userRoutes);
+router.use('/currency', currencyRoutes);
+router.use('/clients', clientRoutes);
+router.use('/warehouses', warehouseRoutes);
+router.use('/parties', partyRoutes);
+router.use('/products', productRoutes);
+router.use('/satisfactions', satisfactionRoutes);
+router.use('/depts', deptRoutes);
+router.use('/groups', groupRoutes);
+router.use('/product-categories', productCategory);
+router.use('/balance', balanceHistory);
+router.use('/categories', categoryRoutes);
+router.use('/units', unitRoutes);
 
 module.exports = router;

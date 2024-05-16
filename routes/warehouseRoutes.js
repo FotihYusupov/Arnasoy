@@ -4,9 +4,9 @@ const warehouseController = require("../controllers/warehouseController");
 
 const warehouseRoutes = Router();
 
-warehouseRoutes.get("/warehouses", authMiddleware, warehouseController.getAll);
-warehouseRoutes.post("/add-warehouse", authMiddleware, warehouseController.addWarehouse);
-warehouseRoutes.put("/update-warehouse/:id", authMiddleware, warehouseController.updateWarehouse);
-warehouseRoutes.delete("/delete-warehouse/:id", authMiddleware, warehouseController.deleteWarehouse);
+warehouseRoutes.get("/", authMiddleware, warehouseController.getAll);
+warehouseRoutes.post("/", authMiddleware, warehouseController.addWarehouse);
+warehouseRoutes.put("/:id", authMiddleware, warehouseController.updateWarehouse);
+warehouseRoutes.delete("/:id", authMiddleware, warehouseController.deleteWarehouse);
 
 module.exports = warehouseRoutes;

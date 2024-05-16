@@ -4,8 +4,8 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const currencyRoutes = Router();
 
-currencyRoutes.get("/currency", authMiddleware, currencyController.getAll);
-currencyRoutes.get("/currency-today", authMiddleware, currencyController.getByDate);
-currencyRoutes.put("/update-currency", authMiddleware, currencyController.updateCurrency);
+currencyRoutes.get("/", authMiddleware, currencyController.getAll);
+currencyRoutes.get("/today", authMiddleware, currencyController.getByDate);
+currencyRoutes.put("/", authMiddleware, currencyController.updateCurrency);
 
 module.exports = currencyRoutes;
