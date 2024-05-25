@@ -4,7 +4,7 @@ exports.create = async (req, res) => {
   try {
     const { name } = req.body;
     const newCategory = await Category.create({ name });
-    res.status(201).json(newCategory);
+    res.status(201).json({ data: newCategory });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -13,7 +13,7 @@ exports.create = async (req, res) => {
 exports.read = async (req, res) => {
   try {
     const categories = await Category.find({ deleted: false });
-    res.status(200).json(categories);
+    res.status(200).json({ data: categories });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -28,7 +28,7 @@ exports.update = async (req, res) => {
       { name },
       { new: true }
     );
-    res.status(200).json(updatedCategory);
+    res.status(200).json({ data: updatedCategory });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -42,7 +42,7 @@ exports.delete = async (req, res) => {
       { deleted: true, deletedAt: new Date() },
       { new: true }
     );
-    res.status(200).json(category);
+    res.status(200).json({ data: category });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
