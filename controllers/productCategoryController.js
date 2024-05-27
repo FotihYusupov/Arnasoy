@@ -4,6 +4,7 @@ exports.create = async (req, res) => {
   try {
     const { name, unit, saledPrice, price } = req.body;
     const newProductCategory = await ProductCategory.create({ name, unit, saledPrice, price });
+    console.log(newProductCategory);
     res.status(201).json({ data: newProductCategory });
   } catch (error) {
     res.status(500).json({ data: null, message: error.message });

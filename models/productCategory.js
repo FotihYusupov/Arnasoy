@@ -8,7 +8,7 @@ const ProductCategorySchema = new Schema({
   },
   unit: {
     type: Types.ObjectId,
-    ref: 'units'
+    ref: 'Units'
   },
   saledPrice: {
     type: Number,
