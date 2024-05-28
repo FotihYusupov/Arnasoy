@@ -132,6 +132,7 @@ exports.addParty = async (req, res) => {
       const newProduct = new Products({
         id: parseInt(generateId(lastItem)),
         ...findProductData._doc,
+        amount: productData.amount,
         warehouse: warehouse,
         dept: req.body.dept,
         parties: newParty._id,
