@@ -4,7 +4,7 @@ const generateId = require("../utils/generateId");
 exports.getAll = async (req, res) => {
   try {
     const includes = req.query.includes;
-    let roles = await Role.find();  
+    let roles = await Role.find({ deleted: false });  
     console.log(roles)
     if (includes) {
       const fields = includes.split(",");

@@ -3,6 +3,7 @@ const Party = require("../models/Party");
 const Users = require("../models/User");
 const Products = require("../models/Products");
 const Clients = require("../models/Client")
+const ProductCategories = require("../models/productCategory");
 const generateId = require("../utils/generateId");
 const bot = require("../bot");
 
@@ -126,9 +127,11 @@ exports.addParty = async (req, res) => {
     const productIds = [];
     for (let productData of products) {
       const lastItem = await Products.find();
+      let findProductData = await ProductCategories.findById(productData.id)
+      Object.assign(findProductData, productData);
       const newProduct = new Products({
         id: parseInt(generateId(lastItem)),
-        ...productData,
+        ...findProductData._doc,
         warehouse: warehouse,
         dept: req.body.dept,
         parties: newParty._id,
