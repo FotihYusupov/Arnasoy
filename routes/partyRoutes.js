@@ -4,7 +4,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const partyRoutes = Router();
 
-partyRoutes.get("/:id", authMiddleware, partyController.getAll);
+partyRoutes.get('/', authMiddleware, partyController.get)
 partyRoutes.get("/generate-id", authMiddleware, partyController.generatePartyId);
 partyRoutes.post("/", authMiddleware, partyController.addParty);
 partyRoutes.put("/update-status/:id", authMiddleware, partyController.updateStatus);

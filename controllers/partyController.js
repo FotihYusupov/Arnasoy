@@ -6,62 +6,16 @@ const Clients = require("../models/Client")
 const ProductCategories = require("../models/productCategory");
 const generateId = require("../utils/generateId");
 const bot = require("../bot");
+const pagination = require('../utils/pagination');
 
-// Controller function to get all parties
-exports.getAll = async (req, res) => {
+exports.get = async (req, res) => {
   try {
-    // Extract 'includes' query parameter
-    const includes = req.query.includes;
-    let parties;
-    // Count total documents in Party model
-    const total = await Party.countDocuments();
-
-    // If 'includes' query parameter is provided
-    if (includes) {
-      const fields = includes.split(",");
-      // Retrieve parties with specified fields populated
-      parties = await Party.find({ deleted: false, saled: false, warehouse: req.params.id }).populate({
-        path: "products",
-        match: { saled: false },
-      })
-      .populate("clients")
-      .skip((req.query.page - 1) * req.query.perPage)
-      .limit(req.query.perPage);
-
-      // Filter parties based on specified fields
-      parties = parties.map((party) => {
-        const filteredParty = {};
-        fields.forEach((field) => {
-          filteredParty[field] = party[field];
-        });
-        return filteredParty;
-      });
-    } else {
-      // Retrieve parties without populating any fields
-      parties = await Party.find({ deleted: false, saled: false, warehouse: req.params.id }).populate({
-        path: "products",
-        match: { saled: false },
-      })
-      .populate("client")
-      .skip((req.query.page - 1) * req.query.perPage)
-      .limit(req.query.perPage);
-    }
-
-    // Send response with parties data and metadata
-    return res.json({
-      data: parties,
-      _meta: {
-        currentPage: +req.query.page,
-        perPage: +req.query.perPage,
-        totalCount: total,
-        pageCount: Math.ceil(total / req.query.perPage),
-      },
-    });
+    const data = await pagination(Party, req.query, 'parties', 'products', 'client', 'warehouse', 'user')
+    return res.json(data)
   } catch (err) {
-    // Handle errors
     return res.status(500).json({ error: "Internal server error", err: err });
   }
-};
+}
 
 // Controller function to generate a unique party ID
 exports.generatePartyId = async (req, res) => {

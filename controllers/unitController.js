@@ -46,7 +46,7 @@ exports.deleteUnit = async (req, res) => {
     const deletedUnit = await Unit.findById(req.params.id);
     if (!deletedUnit) {
       return res.status(404).json({
-        message: "Unit NOt Found",
+        message: "Unit Not Found",
       });
     }
     deletedUnit.deleted = true;

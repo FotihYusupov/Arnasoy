@@ -4,28 +4,13 @@ const RoleSchema = new mongoose.Schema({
   id: {
     type: Number
   },
-  role: {
+  name: {
     type: String,
+    required: true
   },
-  reports: {
+  access: {
     type: Array,
-  },
-  products: {
-    type: Array,
-  },
-  money: {
-    type: Array,
-  },
-  settings: {
-    type: Array,
-  },
-  deletedAt: {
-    type: Date,
-    default: null, 
-  },
-  deleted: {
-    type: Boolean,
-    default: false
+    require: true
   }
 });
 

@@ -1,26 +1,11 @@
 const Role = require("../models/Role");
 const generateId = require("../utils/generateId");
+const pagination = require("../utils/pagination")
 
 exports.getAll = async (req, res) => {
   try {
-    const includes = req.query.includes;
-    let roles = await Role.find({ deleted: false });  
-    console.log(roles)
-    if (includes) {
-      const fields = includes.split(",");
-      roles = roles.map((role) => {
-        const filteredRole = {};
-        fields.forEach((field) => {
-          if (!role.hasOwnProperty(field)) {
-            filteredRole[field] = role[field];
-          }
-        });
-        return filteredRole;
-      });
-    }
-    return res.json({
-      data: roles,
-    });
+    const data = await pagination(Role, req.query, 'roles')
+    return res.json(data);
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -45,7 +30,6 @@ exports.addRole = async (req, res) => {
 exports.updateRole = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
 
     const { _id, ...updateData } = req.body;
 

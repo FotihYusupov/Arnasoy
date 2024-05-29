@@ -1,4 +1,5 @@
 const ProductCategory = require('../models/productCategory');
+const pagination = require("../utils/pagination")
 
 exports.create = async (req, res) => {
   try {
@@ -12,6 +13,7 @@ exports.create = async (req, res) => {
 
 exports.read = async (req, res) => {
   try {
+    const data = await pagination(ProductCategory, req.query, 'unit')
     const productCategories = await ProductCategory.find({ deleted: false }).populate('unit');
     res.status(200).json({ data: productCategories });
   } catch (error) {

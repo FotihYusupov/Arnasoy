@@ -5,6 +5,10 @@ const UnitSchema = new mongoose.Schema(
     name: {
       type: String,
     },
+    shortName: {
+      type: String,
+      required: true,
+    },
     deleted: {
       type: Boolean,
       default: false,
