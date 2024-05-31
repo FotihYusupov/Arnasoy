@@ -56,7 +56,7 @@ const ClientSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    indebtedness: {
+    indebtedness: { // bizning clientdan qarzidorligimiz
       type: Number,
       default: 0
     },

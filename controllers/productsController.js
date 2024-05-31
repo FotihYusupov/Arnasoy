@@ -5,45 +5,17 @@ const Party = require("../models/Party");
 const Client = require("../models/Client");
 const Users = require("../models/User");
 const Dept = require("../models/Debt");
+const pagination = require("../utils/pagination");
 const generateId = require("../utils/generateId");
 const bot = require("../bot");
 
 // Barcha mahsulotlarni olish uchun nazorat funksiyasi
 exports.getAll = async (req, res) => {
   try {
-    // So'rov parametrlarini ajratib olish
-    const { includes, search } = req.query;
-    const { id } = req.params;
-    
-    // Barcha mahsulotlarni olib, partiyalarni to'ldirish
-    let products = await Products.find().populate("parties");
-    // Mahsulotlarni ombor ID'siga qarab filterlash
-    products = products.filter((e) => e.parties.warehouse == id);
-    
-    // Qidiruv amalini bajarish, agar belgilangan
-    if (search) {
-      const regex = new RegExp(search, "i");
-      products = products.filter((product) => {
-        return regex.test(product.name);
-      });
-    }
-    // Agar "includes" belgilangan bo'lsa
-    if (includes) {
-      const fields = includes.split(",");
-      products = products.map((product) => {
-        const filteredProduct = {};
-        fields.forEach((field) => {
-          if (!product.hasOwnProperty(field)) {
-            filteredProduct[field] = product[field];
-          }
-        });
-        return filteredProduct;
-      });
-    }
-    // Ma'lumotlarni JSON ko'rinishida qaytarish
-    res.json({
-      data: products,
-    });
+    req.query.filter = { saled: false, ...req.query.filter };
+    console.log(req.query);
+    const data = await pagination(Products, req.query, "products", "parties");
+    return res.json(data);
   } catch (err) {
     // Xatolarni qaytarish
     return res.json(err);
@@ -53,42 +25,15 @@ exports.getAll = async (req, res) => {
 // Barcha unikal mahsulotlarni olish uchun nazorat funksiyasi
 exports.getUniqueProducts = async (req, res) => {
   try {
-    // So'rov parametrlarini ajratib olish
-    const { includes, search } = req.query;
-    const { id } = req.params;
-    // Barcha mahsulotlarni olib, partiyalarni to'ldirish
-    let products = await Products.find().populate("parties");
-    products = products.filter((e) => e.parties.warehouse == id);
-    // Qidiruv amalini bajarish, agar belgilangan
-    if (search) {
-      const regex = new RegExp(search, "i");
-      products = products.filter((product) => {
-        return regex.test(product.name);
-      });
-    }
-    // Agar "includes" belgilangan bo'lsa
-    if (includes) {
-      const fields = includes.split(",");
-      products = products.map((product) => {
-        const filteredProduct = {};
-        fields.forEach((field) => {
-          if (!product.hasOwnProperty(field)) {
-            filteredProduct[field] = product[field];
-          }
-        });
-        return filteredProduct;
-      });
-    }
+    const data = await pagination(Products, req.query, "products", "parties");
     // Mahsulotlarni sanab, tartiblash
-    products.sort((a, b) => a.createdAt - b.createdAt);
+    data.data = data.data.sort((a, b) => a.createdAt - b.createdAt);
     // Unikal mahsulotlarni aniqlash
-    products = [...new Set(products.map((p) => p.name))].map((name) =>
-      products.find((p) => p.name === name)
+    data.data = [...new Set(data.data.map((p) => p.name))].map((name) =>
+      data.data.find((p) => p.name === name)
     );
     // Ma'lumotlarni JSON ko'rinishida qaytarish
-    res.json({
-      data: products,
-    });
+    res.json(data);
   } catch (err) {
     // Xatolarni qaytarish
     return res.json(err);
@@ -405,7 +350,6 @@ exports.transfer = async (req, res) => {
     const newProducts = [];
     // Har bir mahsulot uchun ko'chirishni amalga oshirish
     for (product of req.body.products) {
-      console.log(product);
       const findProduct = await Products.findById(product.id);
       if (findProduct.amount == product.amount) {
         findProduct.warehouse = product.warehouse;
@@ -451,7 +395,6 @@ exports.transfer = async (req, res) => {
     });
   } catch (err) {
     // Xatolarni qaytarish
-    console.log(err);
     return res.json(err);
   }
 };

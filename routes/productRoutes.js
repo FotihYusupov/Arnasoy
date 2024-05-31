@@ -4,8 +4,8 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const productRoutes = Router();
 
-productRoutes.get("/:id", authMiddleware, productController.getAll);
-productRoutes.get("/unique/:id", authMiddleware, productController.getUniqueProducts);
+productRoutes.get("/", authMiddleware, productController.getAll);
+productRoutes.get("/unique/", authMiddleware, productController.getUniqueProducts);
 productRoutes.get("/product/:id", authMiddleware, productController.findById);
 productRoutes.post("/sale", authMiddleware, productController.SaleProduct);
 productRoutes.patch("/get-price", authMiddleware, productController.getPrice);

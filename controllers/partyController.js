@@ -54,7 +54,7 @@ exports.addParty = async (req, res) => {
     } = req.body;
 
     // Create a new Party instance
-    const newParty = new Party({
+    let newParty = new Party({
       id,
       client,
       logistic,
@@ -76,13 +76,13 @@ exports.addParty = async (req, res) => {
     const findClient = await Clients.findById(client)
     findClient.indebtedness += total
     await findClient.save()
-
     // Add products to the party
     const productIds = [];
     for (let productData of products) {
       const lastItem = await Products.find();
       let findProductData = await ProductCategories.findById(productData.id)
       Object.assign(findProductData, productData);
+      delete findProductData._doc._id;
       const newProduct = new Products({
         id: parseInt(generateId(lastItem)),
         ...findProductData._doc,
@@ -94,11 +94,10 @@ exports.addParty = async (req, res) => {
       await newProduct.save();
       productIds.push(newProduct._id);
     }
-
     // Update party's products
     newParty.products = productIds;
     await newParty.save();
-
+    newParty = await newParty.populate('products');
     // Notify users about the new party
     const findUser = await Users.findById(req.headers.userId);
     const users = await Users.find({ bot: true, deleted: false, active: true });
@@ -118,7 +117,6 @@ exports.addParty = async (req, res) => {
     });
   } catch (err) {
     // Handle errors
-    console.log(err)
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };

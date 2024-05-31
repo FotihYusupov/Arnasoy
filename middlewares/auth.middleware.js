@@ -21,9 +21,10 @@ function authMiddleware(req, res, next) {
       }
     }
   } else {
-    res.status(401).json({
-      message: "Token is not defined",
-    });
+    next()
+    // res.status(401).json({
+    //   message: "Token is not defined",
+    // });
   }
 }
 
