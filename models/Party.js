@@ -29,7 +29,7 @@ const PartySchema = new mongoose.Schema({
     },
   ],
   departureDate: {
-    type: Date,
+    type: String,
   },
   transportNumber: {
     type: String,
@@ -55,7 +55,6 @@ const PartySchema = new mongoose.Schema({
   },
   totalSum: {
     type: Number,
-    required: true
   },
   products: [{
     type: mongoose.Types.ObjectId,

@@ -74,13 +74,12 @@ exports.addUser = async (req, res) => {
     const newUser = new User({
       id: generateId(users),
       ...req.body,
-    });
+    })
     newUser.image = req.images ? req.images[0] : [];
     await newUser.save();
     return res.status(201).json({ data: newUser });
   } catch (err) {
-    console.log(err);
-    return res.json(err);
+    return res.status(400).json(err);
   }
 };
 
@@ -95,7 +94,6 @@ exports.login = async (req, res) => {
     const token = sign(user._id.toString());
     return res.json({ data: { token, user } });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -107,6 +105,7 @@ exports.updateUser = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }
+    req.body.password = updatedUser.password
     Object.assign(updatedUser, req.body);
     if (req.image) {
       updatedUser.image = req.image;
@@ -114,7 +113,6 @@ exports.updateUser = async (req, res) => {
     await updatedUser.save();
     return res.json({ data: updatedUser });
   } catch (err) {
-    console.log(err);
     return res.status(500).json(err);
   }
 };

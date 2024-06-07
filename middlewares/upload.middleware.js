@@ -19,7 +19,6 @@ const outputPath = `${process.cwd()}/uploads/`
 const uploadFile = (req, res, next) => {
   uploadMiddleware(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
-      console.log(err);
       return res.status(400).json({ message: 'File upload error' });
     } else if (err) {
       return res.status(500).json({ message: 'Internal server error' });

@@ -36,7 +36,6 @@ exports.delete = async (req, res) => {
     const group = await Group.findByIdAndUpdate(id, { deleted: true, deletedAt: new Date() }, { new: true });
     res.status(200).json({ data: group });
   } catch (err) {
-    console.log(err);
     return res.json(err)
   }
 }

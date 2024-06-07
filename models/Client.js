@@ -61,7 +61,7 @@ const ClientSchema = new mongoose.Schema(
       default: 0
     },
     dateBirth: {
-      type: Number,
+      type: String,
     },
     deleted: {
       type: Boolean,

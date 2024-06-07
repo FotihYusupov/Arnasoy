@@ -13,7 +13,6 @@ const bot = require("../bot");
 exports.getAll = async (req, res) => {
   try {
     req.query.filter = { saled: false, ...req.query.filter };
-    console.log(req.query);
     const data = await pagination(Products, req.query, "products", "parties");
     return res.json(data);
   } catch (err) {
@@ -56,111 +55,6 @@ exports.findById = async (req, res) => {
     // Ma'lumotlarni JSON ko'rinishida qaytarish
     return res.json({
       data: findProduct,
-    });
-  } catch (err) {
-    // Xatolarni qaytarish
-    return res.json(err);
-  }
-};
-
-// Narxlarni olish uchun nazorat funksiyasi
-exports.getPrice = async (req, res) => {
-  try {
-    // So'rovdan mahsulotlarni olish
-    const { products } = req.body;
-    // Agar mahsulotlar belgilanmagan bo'lsa
-    if (!products) {
-      return res.json(500).json({
-        message: "Mahsulotlar aniqlanmagan",
-      });
-    }
-    // Xatolar va yangilangan mahsulotlar uchun bo'sh arraylar
-    const errors = [];
-    const updatedProducts = [];
-    // Har bir mahsulot uchun narxni hisoblash
-    for (let product of products) {
-      const findProduct = await Products.findById(product.id);
-      // Agar mahsulot topilmasa
-      if (!findProduct) {
-        errors.push(`ID si ${product.id} bo'lgan mahsulot topilmadi`);
-        continue;
-      }
-      // Mahsulot miqdorini va narxini yangilash
-      if (findProduct.amount > product.amount) {
-        findProduct.saledAmount = product.amount;
-        findProduct.amount = findProduct.amount - product.amount;
-        findProduct.saledPrice = product.saledPrice;
-        updatedProducts.push(findProduct);
-      } else if (findProduct.amount == product.amount) {
-        findProduct.saledAmount = product.amount;
-        findProduct.amount = 0;
-        findProduct.saledPrice = product.saledPrice;
-        findProduct.saled = true;
-        updatedProducts.push(findProduct);
-      } else if (findProduct.amount < product.amount) {
-        findProduct.saledAmount = findProduct.amount;
-        let amount = product.amount - findProduct.amount;
-        findProduct.amount = 0;
-        findProduct.saled = true;
-        findProduct.saledPrice = product.saledPrice;
-        updatedProducts.push(findProduct);
-        for (let i = 0; i < products.length; i++) {
-          let newProducts = await Products.find({ _id: { $nin: ids } });
-          newProducts = [...new Set(newProducts.map((p) => p.name))].map(
-            (name) => newProducts.find((p) => p.name === name)
-          );
-          const newFindProduct = newProducts.find(
-            (e) => e.name === findProduct.name
-          );
-          if (newFindProduct) {
-            if (newFindProduct.amount > amount) {
-              newFindProduct.saledAmount = amount;
-              newFindProduct.amount = newFindProduct.amount - amount;
-              amount = 0;
-              newFindProduct.saledPrice = product.saledPrice;
-              updatedProducts.push(newFindProduct);
-            } else if (newFindProduct.amount == amount) {
-              newFindProduct.saledAmount = amount;
-              newFindProduct.amount = 0;
-              findProduct.saled = true;
-              amount = 0;
-              newFindProduct.saledPrice = product.saledPrice;
-              updatedProducts.push(newFindProduct);
-            } else if (newFindProduct.amount < amount) {
-              newFindProduct.saledAmount = newFindProduct.amount;
-              amount = amount - newFindProduct.amount;
-              newFindProduct.amount = 0;
-              newFindProduct.saled = true;
-              amount = amount - newFindProduct.amount;
-              ids.push(newFindProduct._id);
-              newFindProduct.saledPrice = product.saledPrice;
-              updatedProducts.push(newFindProduct);
-            }
-          } else {
-            break;
-          }
-        }
-      } else {
-        errors.push(`Mahsulot ID si ${product.id} uchun yetarli miqdor yo'q`);
-      }
-    }
-
-    // Agar xatolar bo'lsa
-    if (errors.length > 0) {
-      return res.status(500).json({
-        message: "So'rovni bajarishda xatolik yuz berdi",
-        errors: errors,
-      });
-    }
-
-    // Mahsulotlar uchun umumiy narxni hisoblash
-    let sum = 0;
-    for (product of updatedProducts) {
-      sum += product.saledAmount * product.price;
-    }
-    // Ma'lumotlarni JSON ko'rinishida qaytarish
-    res.json({
-      data: sum,
     });
   } catch (err) {
     // Xatolarni qaytarish
@@ -315,19 +209,18 @@ exports.SaleProduct = async (req, res) => {
     }
 
     // Foydalanuvchi haqida ma'lumotlarni olish
-    const findUser = await Users.findById(req.headers.userId);
-    // Aktiv va o'chirilgan bot foydalanuvchilarni olish
-    const users = await Users.find({ bot: true, deleted: false, active: true });
+    // const findUser = await Users.findById(req.headers.userId);
+    // // Aktiv va o'chirilgan bot foydalanuvchilarni olish
+    // const users = await Users.find({ bot: true, deleted: false, active: true });
 
-    // Barcha bot foydalanuvchilarga xabar yuborish
-    users.forEach((user) => {
-      const messageText = `Sotib olingan mahsulotlar.\n id: ${saledProduct.id}\n foydalanuvchi: ${findUser.name} ${findUser.lastName}`;
-      if (user.chatId) {
-        bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {
-          console.log(err);
-        });
-      }
-    });
+    // // Barcha bot foydalanuvchilarga xabar yuborish
+    // users.forEach((user) => {
+    //   const messageText = `Sotib olingan mahsulotlar.\n id: ${saledProduct.id}\n foydalanuvchi: ${findUser.name} ${findUser.lastName}`;
+    //   if (user.chatId) {
+    //     bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {
+    //     });
+    //   }
+    // });
 
     // Ma'lumotlarni JSON ko'rinishida qaytarish
     return res.status(200).json({
@@ -335,7 +228,6 @@ exports.SaleProduct = async (req, res) => {
     });
   } catch (err) {
     // Xatolarni qaytarish
-    console.log(err);
     return res.status(500).json({
       message: "Ichki server xatosi",
       error: err.message,

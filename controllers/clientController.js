@@ -23,7 +23,6 @@ exports.addClient = async (req, res) => {
     await newClient.save();
     return res.status(201).json({ data: newClient });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

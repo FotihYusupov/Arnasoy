@@ -10,7 +10,7 @@ const pagination = require('../utils/pagination');
 
 exports.get = async (req, res) => {
   try {
-    const data = await pagination(Party, req.query, 'parties', 'products', 'client', 'warehouse', 'user')
+    const data = await pagination(Party, req.query, 'parties', 'products', 'client', 'warehouse')
     return res.json(data)
   } catch (err) {
     return res.status(500).json({ error: "Internal server error", err: err });
@@ -106,7 +106,6 @@ exports.addParty = async (req, res) => {
       const messageText = `Yangi partiya qo'shildi.\n id: ${newParty.id}\n user: ${findUser.name} ${findUser.lastName}`;
       if (user.chatId) {
         bot.sendMessage(parseInt(user.chatId), messageText).catch(err => {
-          console.log(err)
         });
       }
     });
@@ -119,6 +118,27 @@ exports.addParty = async (req, res) => {
     // Handle errors
     return res.status(500).json({ error: "Internal Server Error" });
   }
+};
+
+exports.updateParty = async (req, res) => {
+  try {
+    const findParty = await Party.findById(req.params.id);
+    if(!findParty) {
+      return res.status(404).json({
+        message: "Party Not Found!"
+      });
+    };
+    Object.assign(findParty, req.body);
+    await findParty.save();
+    if(req.body.products) {
+      for(product of req.body.products) {
+        const findProduct = await Products.findById(product.productId);
+        Object.assign(findProduct, product);
+      };
+    }
+  } catch (err) {
+    return res.status(400).json(err);
+  };
 };
 
 // Controller function to update party status

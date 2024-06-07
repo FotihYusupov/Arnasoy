@@ -47,7 +47,6 @@ exports.updateRole = async (req, res) => {
       data: updatedRole,
     });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

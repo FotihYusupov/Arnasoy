@@ -17,7 +17,6 @@ exports.getById = async (req, res) => {
   }
 };
 
-
 exports.checkDept = async (req, res) => {
   try {
     const updated = [];

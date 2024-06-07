@@ -4,8 +4,10 @@ const SatisfactionSchema = new mongoose.Schema({
   id: {
     type: Number,
   },
-  name: {
-    type: String,
+  type: {
+    type: mongoose.Types.ObjectId,
+    ref: "satisfactionType",
+    required: true,
   },
   comment: {
     type: String,

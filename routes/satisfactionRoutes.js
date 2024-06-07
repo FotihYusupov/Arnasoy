@@ -6,6 +6,5 @@ const satisfactionRoutes = Router();
 
 satisfactionRoutes.get("/", authMiddleware, satisfactionController.getAll);
 satisfactionRoutes.post("/", authMiddleware, satisfactionController.addSatisfaction);
-satisfactionRoutes.delete("/:id", authMiddleware, satisfactionController.cancelSatisfaction);
 
 module.exports = satisfactionRoutes;

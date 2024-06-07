@@ -42,7 +42,7 @@ const paginate = async (model, query, route, ...populateFields) => {
     const sortOption = sortFn(sort);
     const selectFields = includes ? includes.replace(/,/g, " ") : "";
     const results = await model
-      .find({ deleted: false, ...filter })
+      .find({ ...filter })
       .select(selectFields)
       .skip((page - 1) * perPage)
       .sort(sortOption)
@@ -72,7 +72,6 @@ const paginate = async (model, query, route, ...populateFields) => {
       },
     };
   } catch (error) {
-    console.log(error);
     return {
       message: "Error occurred while paginating results",
       error: error.message,

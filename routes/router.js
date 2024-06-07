@@ -13,6 +13,7 @@ const productCategory = require("./productCategoryRoutes");
 const balanceHistory = require("./balanceHistoryRoutes");
 const categoryRoutes = require("./categoryRoutes");
 const unitRoutes = require("./unitRoutes");
+const satisfactionTypeRoutes = require("./satisfactionTypeRoutes");
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use('/product-categories', productCategory);
 router.use('/balance', balanceHistory);
 router.use('/categories', categoryRoutes);
 router.use('/units', unitRoutes);
+router.use('/satisfaction-type', satisfactionTypeRoutes);
 
 module.exports = router;
