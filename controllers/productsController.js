@@ -62,6 +62,19 @@ exports.findById = async (req, res) => {
   }
 };
 
+exports.generateInvoice = async (req, res) => {
+  try {
+    const saleds = await SaledProducts.find();
+    const last = saleds[saleds.length - 1]
+    const invoice = last ? `inv-${parseInt(last.invoice ? last.invoice.split('-')[1] : 0) + 1}` : 'inv-1';
+    return res.json({
+      data: invoice,
+    });
+  } catch (err) {
+    return res.status(400).json(err);
+  };
+};
+
 // Mahsulotlarni sotib olish uchun nazorat funksiyasi
 exports.SaleProduct = async (req, res) => {
   try {
@@ -158,7 +171,7 @@ exports.SaleProduct = async (req, res) => {
       user: req.headers.userId,
       products: updatedProducts,
     });
-
+    req.body.dept = true
     // Agar borc mavjud bo'lsa
     if (req.body.dept) {
       if (findClient.balance >= req.body.totalSum) {
@@ -207,7 +220,7 @@ exports.SaleProduct = async (req, res) => {
         await party.save();
       }
     }
-
+    // TODO Commentdan ochib qo'yish.
     // Foydalanuvchi haqida ma'lumotlarni olish
     // const findUser = await Users.findById(req.headers.userId);
     // // Aktiv va o'chirilgan bot foydalanuvchilarni olish

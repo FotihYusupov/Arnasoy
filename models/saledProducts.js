@@ -7,6 +7,11 @@ const SaledProductsSchema = new mongoose.Schema({
   products: {
     type: Array,
   },
+  invoice: {
+    type: String,
+    required: true,
+    unique: true
+  },
   invoiceDate: {
     type: Date,
   },

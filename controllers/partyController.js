@@ -36,6 +36,7 @@ exports.generatePartyId = async (req, res) => {
 
 // Controller function to add a new party
 exports.addParty = async (req, res) => {
+  console.log('he');
   try {
     // Extract request body data
     const {
@@ -116,6 +117,7 @@ exports.addParty = async (req, res) => {
     });
   } catch (err) {
     // Handle errors
+    console.log(err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };

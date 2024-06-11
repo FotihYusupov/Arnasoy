@@ -19,6 +19,11 @@ const SatisfactionSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: "party"
   },
+  user: {
+    type: mongoose.Types.ObjectId,
+    required: true,
+    ref: "users",
+  },
   deleted: {
     type: Boolean,
     default: false

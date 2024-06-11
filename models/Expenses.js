@@ -17,6 +17,11 @@ const ExpensesSchema = new mongoose.Schema(
     price: {
       type: String,
     },
+    user: {
+      type: mongoose.Types.ObjectId,
+      required: true,
+      ref: "users",
+    },
     deleted: {
       type: Boolean,
       default: false,
