@@ -1,25 +1,24 @@
 const mongoose = require('mongoose');
 
 const balanceHistorySchema = new mongoose.Schema({
-  client: {
-    type: mongoose.Types.ObjectId,
-    ref: "clients"
-  },
   user: {
     type: mongoose.Types.ObjectId,
     ref: "users"
   },
-  invoice: {
-    type: String,
-  },
-  invoiceDate: {
+  current: {
     type: Number,
+    required: true
+  },
+  next: {
+    type: Number,
+    required: true
   },
   amount: {
     type: Number,
   },
   type: {
     type: Number,
+    required: true
   },
   currency: {
     type: String,

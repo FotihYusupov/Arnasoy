@@ -4,6 +4,7 @@ const Party = require("../models/Party");
 const Products = require("../models/Products");
 const generateId = require("../utils/generateId");
 const paginate = require("../utils/pagination");
+const { addBalance, updateBalance } = require("../utils/updateBalance")
 
 exports.getExpenses = async (req, res) => {
   try {
@@ -51,10 +52,10 @@ exports.addSatisfaction = async (req, res) => {
     }
 
     const priceIncreasePerProduct =
-      parseInt(req.body.price) / allProductsAmount;
+      parseInt(req.body.sum) / allProductsAmount;
 
     for (const product of findParty.products) {
-      product.price += priceIncreasePerProduct;
+      product.sum += priceIncreasePerProduct;
       await product.save();
     }
 
@@ -68,6 +69,7 @@ exports.addSatisfaction = async (req, res) => {
       user: req.headers.userId,
     });
 
+    await updateBalance(req.headers.userId, req.body.balanceType, req.body.price, "Partiya uchun Dop Rasxod");
     return res.status(201).json({
       data: newSatisfaction,
     });
@@ -84,18 +86,20 @@ exports.addSatisfactionProduct = async (req, res) => {
         message: "Product Not Found",
       });
     }
-    findProduct.price += parseInt(req.body.price) / findProduct.amount;
+    findProduct.sum += parseInt(req.body.sum) / findProduct.amount;
     await findProduct.save();
 
     const satisfactions = await Satisfaction.find();
     const newSatisfaction = await Satisfaction.create({
       id: generateId(satisfactions),
       type: req.body.type,
-      comment: req.body.comment,
-      price: req.body.price,
+      expComment: req.body.expComment,
+      sum: req.body.sum,
       parties: findProduct.parties,
       user: req.headers.userId,
     });
+
+    await updateBalance(req.headers.userId, req.body.balanceType, req.body.price, "Product uchun Dop Rasxod");
 
     return res.json({
       message: newSatisfaction,
@@ -111,11 +115,14 @@ exports.expenses = async (req, res) => {
     const newExpense = new Expenses({
       id: generateId(expenses),
       type: req.body.type,
-      comment: req.body.comment ? req.body.comment : "",
-      price: req.body.price,
+      expComment: req.body.expComment ? req.body.expComment : "",
+      sum: req.body.sum,
       user: req.headers.userId,
     });
     await newExpense.save();
+
+    await updateBalance(req.headers.userId, req.body.balanceType, req.body.price, "Oylik rasxod");
+
     return res.json({
       data: newExpense,
     });
@@ -140,6 +147,13 @@ exports.updateSatisfaction = async (req, res) => {
         message: "Not Found!"
       });
     };
+
+    if(findSatisfaction.sum < req.body.sum) {
+      await updateBalance(req.headers.userId, req.body.balanceType, (req.body.sum - findSatisfaction.sum, "Partiya dop rasxod o'zgartirildi"));
+    } else {
+      await addBalance(req.headers.userId, req.body.balanceType, (findSatisfaction.sum - req.body.sum, "Partiya dop rasxod o'zgartirildi"));
+    }
+
     return res.json({
       data: findSatisfaction,
     });
@@ -164,6 +178,13 @@ exports.updateExpenses = async (req, res) => {
         message: "Not Found!"
       });
     };
+
+    if(findExpense.sum < req.body.sum) {
+      await updateBalance(req.headers.userId, req.body.balanceType, (req.body.sum - findExpense.sum, "Oylik rasxod o'zgartirildi"));
+    } else {
+      await addBalance(req.headers.userId, req.body.balanceType, (findExpense.sum - req.body.sum, "Oylik rasxod o'zgartirildi"));
+    }
+
     return res.json({
       data: findExpense,
     });
@@ -171,3 +192,20 @@ exports.updateExpenses = async (req, res) => {
     return res.status(400).json(err);
   }
 }
+
+exports.deleteExpense = async (req, res) => {
+  try {
+    const findExpense = await Expenses.findByIdAndDelete(req.params.id);
+    if(!findExpense) {
+      return res.status(404).json({
+        message: "Expense Not Found!"
+      });
+    }
+    await addBalance(req.headers.userId, req.body.balanceType, findExpense.sum, "Oylik rasxod bekor qilindi");
+    return res.json({
+      message: "Expense deleted!",
+    });
+  } catch (err) {
+    return res.status(400).json(err);
+  };
+};

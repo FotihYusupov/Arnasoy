@@ -11,10 +11,10 @@ const ExpensesSchema = new mongoose.Schema(
       ref: "satisfactionType",
       required: true,
     },
-    comment: {
+    expComment: {
       type: String,
     },
-    price: {
+    sum: {
       type: String,
     },
     user: {

@@ -10,7 +10,18 @@ const pagination = require('../utils/pagination');
 
 exports.get = async (req, res) => {
   try {
-    const data = await pagination(Party, req.query, 'parties', 'products', 'client', 'warehouse')
+    const data = await pagination(Party, req.query, 'parties', 'products', 'client', 'warehouse', 'logistic', 'user')
+    for(product of data.data) {
+      for(productData of product.products) {
+        productData._doc.productData = {
+          name: productData.name,
+          price: productData.price,
+          saledPrice: productData.saledPrice,
+          unit: productData.unit,
+          _id: productData._id
+        }
+      }
+    }
     return res.json(data)
   } catch (err) {
     return res.status(500).json({ error: "Internal server error", err: err });
@@ -36,7 +47,6 @@ exports.generatePartyId = async (req, res) => {
 
 // Controller function to add a new party
 exports.addParty = async (req, res) => {
-  console.log('he');
   try {
     // Extract request body data
     const {
@@ -66,7 +76,7 @@ exports.addParty = async (req, res) => {
       invoiceDate,
       status,
       warehouse,
-      totalSum: total,
+      totalSum: parseInt(total),
       user: req.headers.userId,
     });
 
@@ -81,7 +91,12 @@ exports.addParty = async (req, res) => {
     const productIds = [];
     for (let productData of products) {
       const lastItem = await Products.find();
-      let findProductData = await ProductCategories.findById(productData.id)
+      let findProductData = await ProductCategories.findById(productData.productId)
+      if(!findProductData) {
+        return res.status(404).json({
+          message: "Product category not found!"
+        });
+      }
       Object.assign(findProductData, productData);
       delete findProductData._doc._id;
       const newProduct = new Products({
@@ -117,8 +132,7 @@ exports.addParty = async (req, res) => {
     });
   } catch (err) {
     // Handle errors
-    console.log(err);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json(err);
   }
 };
 
@@ -130,14 +144,39 @@ exports.updateParty = async (req, res) => {
         message: "Party Not Found!"
       });
     };
-    Object.assign(findParty, req.body);
-    await findParty.save();
     if(req.body.products) {
       for(product of req.body.products) {
-        const findProduct = await Products.findById(product.productId);
-        Object.assign(findProduct, product);
+        product.price = parseInt(product.price);
+        product.amount = parseInt(product.amount);
+        const find = await Products.findById(product.id);
+        delete product.id
+
+        if(!find) {
+          return res.status(404).json({
+            message: "Product not found",
+          });
+        }
+
+        if(product.productId) {
+          const findCategory = await ProductCategories.findById(product.productId);
+          if(!findCategory) {
+            return res.status(404).json({
+              message: "Product category not found",
+            });
+          }
+  
+          find.name = findCategory.name
+        }
+        Object.assign(find, product);
+        await find.save();
       };
     }
+    delete req.body.products
+    Object.assign(findParty, req.body);
+    await findParty.save();
+    return res.json({
+      data: findParty,
+    });
   } catch (err) {
     return res.status(400).json(err);
   };
@@ -170,5 +209,27 @@ exports.updateStatus = async (req, res) => {
     return res.json({
       message: "Internal Server Error",
     });
+  }
+};
+
+exports.deleteParty = async (req, res) => {
+  try {
+    const findParty = await Party.findById(req.params.id);
+    if(!findParty) {
+      return res.status(404).json({
+        message: "Party Not Found",
+      });
+    }
+    const findClient = await Clients.findById(findParty.client);
+    if(!findClient) {
+      return res.status(404).json({
+        message: "Client NOt Found!"
+      });
+    }
+    findClient.indebtedness -= findParty.totalSum
+    await findClient.save();
+
+  } catch (err) {
+    return res.status(400).json(err);
   }
 };

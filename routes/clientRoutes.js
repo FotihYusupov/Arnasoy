@@ -7,7 +7,7 @@ const clientRoutes = Router();
 clientRoutes.get("/", authMIddleware, clientController.getAll);
 clientRoutes.post("/", authMIddleware, clientController.addClient);
 clientRoutes.put("/:id", authMIddleware, clientController.updateClient);
-clientRoutes.put("/balance/:id", authMIddleware, clientController.updateClientBalance);
+// clientRoutes.put("/balance/:id", authMIddleware, clientController.updateClientBalance);
 clientRoutes.delete("/:id", authMIddleware, clientController.deleteClient);
 
 module.exports = clientRoutes;

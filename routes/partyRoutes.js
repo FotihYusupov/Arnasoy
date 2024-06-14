@@ -7,6 +7,8 @@ const partyRoutes = Router();
 partyRoutes.get('/', authMiddleware, partyController.get)
 partyRoutes.get("/generate-id", authMiddleware, partyController.generatePartyId);
 partyRoutes.post("/", authMiddleware, partyController.addParty);
+partyRoutes.put("/:id", authMiddleware, partyController.updateParty);
 partyRoutes.put("/update-status/:id", authMiddleware, partyController.updateStatus);
+partyRoutes.delete("/:id", authMiddleware, partyController.deleteParty);
 
 module.exports = partyRoutes;

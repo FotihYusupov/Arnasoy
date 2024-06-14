@@ -8,11 +8,15 @@ const PartySchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: "client",
   },
+  logistic: {
+    type: mongoose.Types.ObjectId,
+    ref: "client",
+  },
   invoice: {
     type: String,
   },
   invoiceDate: {
-    type: Date,
+    type: String,
   },
   status: {
     type: Number,
@@ -47,7 +51,7 @@ const PartySchema = new mongoose.Schema({
   },
   user: {
     type: mongoose.Types.ObjectId,
-    ref: "user",
+    ref: "users",
   },
   saled: {
     type: Boolean,
