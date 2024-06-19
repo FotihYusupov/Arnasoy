@@ -25,17 +25,18 @@ exports.getAll = async (req, res) => {
       Satisfaction,
       req.query,
       "satisfactions",
-      "type"
+      "type",
+      "user"
     );
-    return res.status(200).json({
-      data: data,
-    });
+    return res.status(200).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 };
 
 exports.addSatisfaction = async (req, res) => {
+  req.body.price = parseInt(req.body.price)
+  console.log(req.body);
   try {
     const findParty = await Party.findById(req.params.id).populate("products");
     if (!findParty) {
@@ -52,10 +53,10 @@ exports.addSatisfaction = async (req, res) => {
     }
 
     const priceIncreasePerProduct =
-      parseInt(req.body.sum) / allProductsAmount;
+      req.body.price / allProductsAmount;
 
     for (const product of findParty.products) {
-      product.sum += priceIncreasePerProduct;
+      product.price += priceIncreasePerProduct;
       await product.save();
     }
 
@@ -63,7 +64,7 @@ exports.addSatisfaction = async (req, res) => {
     const newSatisfaction = await Satisfaction.create({
       id: generateId(satisfactions),
       type: req.body.type,
-      comment: req.body.comment,
+      expComment: req.body.comment,
       price: req.body.price,
       parties: req.params.id,
       user: req.headers.userId,
@@ -74,6 +75,7 @@ exports.addSatisfaction = async (req, res) => {
       data: newSatisfaction,
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ error: err.message });
   }
 };

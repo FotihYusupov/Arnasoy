@@ -4,6 +4,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const balanceHistoryRoutes = Router();
 
-balanceHistoryRoutes.get("/history/:id", authMiddleware, balanceHistoryController.getById);
+// balanceHistoryRoutes.get("/history/:id", authMiddleware, balanceHistoryController.getById);
+balanceHistoryRoutes.get("/", authMiddleware, balanceHistoryController.getAll)
 
 module.exports = balanceHistoryRoutes;

@@ -1,12 +1,16 @@
 const Dept = require("../models/Debt");
-const Client = require("../models/Client");
-const Users = require("../models/User");
+const DeptHistory = require("../models/DeptHistory");
+const paginate = require("../utils/pagination");
 
 exports.getById = async (req, res) => {
   try {
     // Mijozga tegishli, o'chirilmagan va to'lanmagan qarzlarni topish
-    const dept = await Dept.find({ clients: req.params.id, deleted: false, paid: false }).populate('saleds');
-    
+    const dept = await Dept.find({
+      clients: req.params.id,
+      deleted: false,
+      paid: false,
+    }).populate("saleds");
+
     // Qarzlarni json formatida qaytarish
     return res.json({
       data: dept,
@@ -17,81 +21,19 @@ exports.getById = async (req, res) => {
   }
 };
 
-exports.checkDept = async (req, res) => {
+exports.getHistory = async (req, res) => {
   try {
-    const updated = [];
-    let sum = req.body.sum;
-
-    // Barcha qarzlarni olish
-    let dept = await Dept.find();
-    dept = dept.reverse();  // Qarzlar ro'yxatini teskari aylantirish
-
-    // Mijozning qarzini topish
-    const findDept = dept.find((e) => e.clients == req.params.id);
-    const findUser = await Users.findById(req.headers.userId);
-    const paymentType = req.body.paymentType;
-
-    // Foydalanuvchi balansini yangilash
-    if (paymentType == 2) {
-      findUser.cardBalance += sum;
-      await findUser.save();
-    } else if (paymentType == 3) {
-      findUser.cashBalance += sum;
-      await findUser.save();
-    } else if (paymentType == 4) {
-      findUser.balance += sum;
-      await findUser.save();
-    }
-
-    // Mijozning qarzini to'lash jarayoni
-    if (findDept.sum < sum) {
-      sum = sum - findDept.sum;
-      findDept.sum = 0;
-      updated.push(findDept);
-      const ids = [findDept._id];
-
-      for (let i = 0; i < ids.length; i++) {
-        const dept = await Dept.find({ _id: { $nin: ids } });
-        const findDept = dept.find((e) => e.clients == req.params.id);
-        if (findDept) {
-          if (findDept.sum < sum) {
-            sum = sum - findDept.sum;
-            findDept.sum = 0;
-            ids.push(findDept._id);
-            updated.push(findDept);
-          } else if (findDept.sum > sum) {
-            findDept.sum = findDept.sum - sum;
-            updated.push(findDept);
-          } else if (findDept.sum == sum) {
-            findDept.sum = 0;
-            updated.push(findDept);
-          }
-        } else {
-          const findClient = await Client.findById(req.params.id);
-          findClient.balance = findClient.balance + sum;
-          await findClient.save();
-          break;
-        }
-      }
-    } else if (findDept.sum > sum) {
-      findDept.sum = findDept.sum - sum;
-      updated.push(findDept);
-    } else if (findDept.sum == sum) {
-      findDept.sum = 0;
-      updated.push(findDept);
-    }
-
-    // Yangilangan qarzlarni saqlash
-    for (dept of updated) {
-      if (dept.sum > 0) {
-        dept.paid = true;
-      }
-      await dept.save();
-    }
-
-    res.json("Success");
+    if (!req.query.filter) req.query.filter = {};
+    req.query.filter.client = req.params.id;
+    const data = await paginate(
+      DeptHistory,
+      req.query,
+      "depts",
+      "client",
+      "user"
+    );
+    return res.json(data);
   } catch (err) {
-    return res.json(err);
+    return res.status(400).json(err);
   }
 };
-

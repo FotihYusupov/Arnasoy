@@ -166,6 +166,7 @@ exports.SaleProduct = async (req, res) => {
       id: req.body.id ? req.body.id : generateId(saledProducts),
       client: req.body.client,
       warehouse: req.body.warehouse,
+      invoice: req.body.invoice,
       invoiceDate: req.body.invoiceDate,
       comment: req.body.comment,
       user: req.headers.userId,

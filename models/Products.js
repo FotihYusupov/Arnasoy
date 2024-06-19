@@ -17,7 +17,7 @@ const ProductsSchema = new mongoose.Schema(
     },
     unit: {
       type: mongoose.Types.ObjectId,
-      ref: "unit"
+      ref: "Units"
     },
     warehouse: {
       type: mongoose.Types.ObjectId,

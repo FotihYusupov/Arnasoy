@@ -77,6 +77,8 @@ const PartySchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+}, {
+  timestamps: true,
 });
 
 PartySchema.pre("save", function (next) {

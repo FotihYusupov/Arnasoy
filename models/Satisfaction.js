@@ -12,7 +12,7 @@ const SatisfactionSchema = new mongoose.Schema({
   expComment: {
     type: String,
   },
-  sum: {
+  price: {
     type: String,
   },
   parties: {

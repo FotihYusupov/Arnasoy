@@ -1,17 +1,44 @@
 const Client = require("../models/Client");
-const Users = require("../models/User");
-const BalanceHistory = require("../models/BalanceHistory");
+const Dept = require("../models/Debt");
+const DeptHistory = require("../models/DeptHistory");
 const generateId = require("../utils/generateId");
 const paginate = require("../utils/pagination");
+const { addBalance, updateBalance } = require("../utils/updateBalance");
 
 exports.getAll = async (req, res) => {
   try {
-    const data = await paginate(Client, req.query, 'clients', 'category', 'group')
-    return res.json(data)
+    if (!req.query.filter) {
+      req.query.filter = {};
+    }
+    req.query.filter.deleted = false;
+    const data = await paginate(
+      Client,
+      req.query,
+      "clients",
+      "category",
+      "group"
+    );
+    return res.json(data);
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.byId = async (req, res) => {
+  try {
+    const findClient = await Client.findById(req.params.id);
+    if(!findClient) {
+      return res.status(404).json({
+        message: "Client Not Found!"
+      })
+    }
+    return res.json({
+      data: findClient,
+    });
+  } catch (err) {
+    return res.status(400).json(err)
+  }
+}
 
 exports.addClient = async (req, res) => {
   try {
@@ -43,89 +70,84 @@ exports.updateClient = async (req, res) => {
   }
 };
 
-// exports.updateClientBalance = async (req, res) => {
-//   try {
-//     if (paymentType == 2) {
-//       if (findUser.cardBalance >= sum) {
-//         findUser.cardBalance += sum;
-//         await findUser.save();
-//       } else {
-//         return res.json({
-//           message: "You don't have enough funds in your balance",
-//         });
-//       }
-//     } else if (paymentType == 3) {
-//       if (findUser.cashBalance >= sum) {
-//         findUser.cashBalance += sum;
-//         await findUser.save();
-//       } else {
-//         return res.json({
-//           message: "You don't have enough funds in your balance",
-//         });
-//       }
-//     } else if (paymentType == 4) {
-//       if (findUser.balance >= sum) {
-//         findUser.balance += sum;
-//         await findUser.save();
-//       }
-//     } else {
-//       return res.json({
-//         message: "You don't have enough funds in your balance",
-//       });
-//     }
-//     const updatedClient = await Client.findByIdAndUpdate(
-//       req.params.id,
-//       { balance: req.body.amount },
-//       { new: true }
-//     );
-//     await BalanceHistory.create({
-//       ...req.body,
-//     });
-//     const findUser = await Users.findById(req.headers.userId)
-//     const paymentType = req.body.paymentType
-//     return res.json({
-//       message: "Client balance updated",
-//       data: updatedClient,
-//     });
-//   } catch (err) {
-//     return res.json(err);
-//   }
-// };
+exports.updateClientBalanceAndPayDebt = async (req, res) => {
+  try {
+    const { balanceType, sum, invoice, invoiceDate } = req.body;
+    const userId = req.headers.userId;
+    const clientId = req.params.id;
+
+    // Add balance update
+    await addBalance(userId, balanceType, sum, "Client qarzini berganda.");
+
+    // Find client
+    const findClient = await Client.findById(clientId);
+    if (!findClient) {
+      return res.status(404).json({ message: "Client Not Found!" });
+    }
+
+    // Initialize remaining sum
+    let remainingSum = parseInt(sum);
+
+    // Retrieve all debts of the client
+    let debts = await Dept.find({ clients: clientId }).sort({ _id: 1 }); // Sort by _id to ensure paying off from oldest to newest
+    const updatedDebts = [];
+
+    // Pay off debts
+    for (let debt of debts) {
+      if (remainingSum <= 0) break;
+      if (debt.sum <= remainingSum) {
+        remainingSum -= debt.sum;
+        debt.sum = 0;
+        debt.paid = true;
+      } else {
+        debt.sum -= remainingSum;
+        remainingSum = 0;
+      }
+      updatedDebts.push(debt);
+    }
+
+    // Add remaining sum to the client's balance
+    findClient.balance += remainingSum;
+    await findClient.save();
+
+    // Save updated debts
+    for (let debt of updatedDebts) {
+      await debt.save();
+    }
+
+    await DeptHistory.create({
+      client: clientId,
+      user: userId,
+      amount: sum,
+      paymentType: balanceType,
+      invoice: invoice,
+      invoiceDate: invoiceDate,
+    });
+
+    return res.json({
+      message: "Client balance and debts updated successfully!",
+      data: findClient,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(err);
+  }
+};
 
 exports.moneyOut = async (req, res) => {
   try {
     const findClient = await Client.findById(req.params.id);
-    const findUser = await Users.findById(req.headers.userId);
-    const paymentType = req.body.paymentType;
-
-    if (paymentType == 2) {
-      if (findUser.cardBalance >= sum) {
-        findUser.cardBalance -= sum;
-        await findUser.save();
-      } else {
-        return res.json({
-          message: "You don't have enough funds in your balance",
-        });
-      }
-    } else if (paymentType == 3) {
-      if (findUser.cashBalance >= sum) {
-        findUser.cashBalance -= sum;
-        await findUser.save();
-      } else {
-        return res.json({
-          message: "You don't have enough funds in your balance",
-        });
-      }
-    } else if (paymentType == 4) {
-      if (findUser.balance >= sum) {
-        findUser.balance -= sum;
-        await findUser.save();
-      }
-    } else {
-      return res.json({
-        message: "You don't have enough funds in your balance",
+    if (!findClient) {
+      return res.status(404).json({
+        message: "Client Not Found!",
       });
     }
+    await updateBalance(
+      req.headers.userId,
+      req.body.balanceType,
+      req.body.amount,
+      "Clientga qarzimizni berdik."
+    );
     findClient.indebtedness -= req.body.sum;
     await findClient.save();
     return res.json({

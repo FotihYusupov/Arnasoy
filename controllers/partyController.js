@@ -2,31 +2,49 @@
 const Party = require("../models/Party");
 const Users = require("../models/User");
 const Products = require("../models/Products");
-const Clients = require("../models/Client")
+const Clients = require("../models/Client");
 const ProductCategories = require("../models/productCategory");
 const generateId = require("../utils/generateId");
 const bot = require("../bot");
-const pagination = require('../utils/pagination');
+const pagination = require("../utils/pagination");
 
 exports.get = async (req, res) => {
   try {
-    const data = await pagination(Party, req.query, 'parties', 'products', 'client', 'warehouse', 'logistic', 'user')
-    for(product of data.data) {
-      for(productData of product.products) {
+    if(!req.query.filter) {
+      req.query.filter = {}
+    }
+    req.query.filter.deleted = false;
+    const data = await pagination(
+      Party,
+      req.query,
+      "parties",
+      "products",
+      "client",
+      "warehouse",
+      "logistic",
+      "user"
+    );
+
+    for (product of data.data) {
+      let total = 0
+      for (productData of product.products) {
+        await productData.populate("unit");
+        total += (productData.amount * productData.price);
         productData._doc.productData = {
           name: productData.name,
           price: productData.price,
           saledPrice: productData.saledPrice,
           unit: productData.unit,
-          _id: productData._id
-        }
+          _id: productData._id,
+        };
+        product._doc.total = total
       }
     }
-    return res.json(data)
+    return res.json(data);
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error", err: err });
+    return res.status(500).json(err);
   }
-}
+};
 
 // Controller function to generate a unique party ID
 exports.generatePartyId = async (req, res) => {
@@ -84,17 +102,19 @@ exports.addParty = async (req, res) => {
     await newParty.save();
 
     // Update client's indebtedness
-    const findClient = await Clients.findById(client)
-    findClient.indebtedness += total
-    await findClient.save()
+    const findClient = await Clients.findById(client);
+    findClient.indebtedness += total;
+    await findClient.save();
     // Add products to the party
     const productIds = [];
     for (let productData of products) {
       const lastItem = await Products.find();
-      let findProductData = await ProductCategories.findById(productData.productId)
-      if(!findProductData) {
+      let findProductData = await ProductCategories.findById(
+        productData.productId
+      );
+      if (!findProductData) {
         return res.status(404).json({
-          message: "Product category not found!"
+          message: "Product category not found!",
         });
       }
       Object.assign(findProductData, productData);
@@ -113,7 +133,7 @@ exports.addParty = async (req, res) => {
     // Update party's products
     newParty.products = productIds;
     await newParty.save();
-    newParty = await newParty.populate('products');
+    newParty = await newParty.populate("products");
     // Notify users about the new party
     const findUser = await Users.findById(req.headers.userId);
     const users = await Users.find({ bot: true, deleted: false, active: true });
@@ -121,8 +141,7 @@ exports.addParty = async (req, res) => {
     users.forEach((user) => {
       const messageText = `Yangi partiya qo'shildi.\n id: ${newParty.id}\n user: ${findUser.name} ${findUser.lastName}`;
       if (user.chatId) {
-        bot.sendMessage(parseInt(user.chatId), messageText).catch(err => {
-        });
+        bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {});
       }
     });
 
@@ -132,6 +151,7 @@ exports.addParty = async (req, res) => {
     });
   } catch (err) {
     // Handle errors
+    console.log(err);
     return res.status(500).json(err);
   }
 };
@@ -139,39 +159,41 @@ exports.addParty = async (req, res) => {
 exports.updateParty = async (req, res) => {
   try {
     const findParty = await Party.findById(req.params.id);
-    if(!findParty) {
+    if (!findParty) {
       return res.status(404).json({
-        message: "Party Not Found!"
+        message: "Party Not Found!",
       });
-    };
-    if(req.body.products) {
-      for(product of req.body.products) {
+    }
+    if (req.body.products) {
+      for (product of req.body.products) {
         product.price = parseInt(product.price);
         product.amount = parseInt(product.amount);
         const find = await Products.findById(product.id);
-        delete product.id
+        delete product.id;
 
-        if(!find) {
+        if (!find) {
           return res.status(404).json({
             message: "Product not found",
           });
         }
 
-        if(product.productId) {
-          const findCategory = await ProductCategories.findById(product.productId);
-          if(!findCategory) {
+        if (product.productId) {
+          const findCategory = await ProductCategories.findById(
+            product.productId
+          );
+          if (!findCategory) {
             return res.status(404).json({
               message: "Product category not found",
             });
           }
-  
-          find.name = findCategory.name
+
+          find.name = findCategory.name;
         }
         Object.assign(find, product);
         await find.save();
-      };
+      }
     }
-    delete req.body.products
+    delete req.body.products;
     Object.assign(findParty, req.body);
     await findParty.save();
     return res.json({
@@ -179,7 +201,7 @@ exports.updateParty = async (req, res) => {
     });
   } catch (err) {
     return res.status(400).json(err);
-  };
+  }
 };
 
 // Controller function to update party status
@@ -212,23 +234,50 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
+exports.updateWarehouse = async (req, res) => {
+  try {
+    const { warehouse } = req.body;
+
+    const findParty = await Party.findById(req.params.id).populate("products");
+    if (!findParty) {
+      return res.status(404).json({
+        message: "Party Not Found!",
+      });
+    }
+
+    findParty.warehouse = warehouse;
+
+    for (let product of findParty.products) {
+      product.warehouse = warehouse;
+      await product.save();
+    }
+
+    await findParty.save();
+
+    return res.json({
+      data: findParty,
+    });
+  } catch (err) {
+    return res.status(400).json(err);
+  }
+};
+
 exports.deleteParty = async (req, res) => {
   try {
     const findParty = await Party.findById(req.params.id);
-    if(!findParty) {
+    if (!findParty) {
       return res.status(404).json({
         message: "Party Not Found",
       });
     }
     const findClient = await Clients.findById(findParty.client);
-    if(!findClient) {
+    if (!findClient) {
       return res.status(404).json({
-        message: "Client NOt Found!"
+        message: "Client NOt Found!",
       });
     }
-    findClient.indebtedness -= findParty.totalSum
+    findClient.indebtedness -= findParty.totalSum;
     await findClient.save();
-
   } catch (err) {
     return res.status(400).json(err);
   }

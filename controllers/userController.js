@@ -127,6 +127,8 @@ const updateRecipientBalance = (type, amount, recipient) => {
   } else if (type == 4) {
     recipient.balance = recipient.balance + amount;
     return recipient;
+  } else {
+    throw new Error("Invalid balance type!")
   }
 };
 
