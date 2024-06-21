@@ -1,6 +1,7 @@
 const Dept = require("../models/Debt");
 const DeptHistory = require("../models/DeptHistory");
 const paginate = require("../utils/pagination");
+const { login } = require("./userController");
 
 exports.getById = async (req, res) => {
   try {
@@ -24,7 +25,7 @@ exports.getById = async (req, res) => {
 exports.getHistory = async (req, res) => {
   try {
     if (!req.query.filter) req.query.filter = {};
-    req.query.filter.client = req.params.id;
+    // req.query.filter.client = req.params.id;
     const data = await paginate(
       DeptHistory,
       req.query,

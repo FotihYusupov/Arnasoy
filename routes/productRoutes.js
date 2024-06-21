@@ -9,6 +9,6 @@ productRoutes.get("/unique/", authMiddleware, productController.getUniqueProduct
 productRoutes.get("/product/:id", authMiddleware, productController.findById);
 productRoutes.get("/invoice", authMiddleware, productController.generateInvoice);
 productRoutes.post("/sale", authMiddleware, productController.SaleProduct);
-productRoutes.put("/transfer", authMiddleware, productController.transfer);
+productRoutes.put("/transfer/:id", authMiddleware, productController.transfer);
 
 module.exports = productRoutes;

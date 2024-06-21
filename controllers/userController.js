@@ -1,36 +1,13 @@
 const User = require("../models/User");
+const paginate = require("../utils/pagination");
 const generateId = require("../utils/generateId");
 const { sign } = require("../utils/jwt");
+const { addBalance, updateBalance } = require("../utils/updateBalance");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const { includes } = req.query;
-    let users = await User.find({ deleted: false })
-      .populate("role")
-      .skip((req.query.page - 1) * req.query.perPage)
-      .limit(req.query.perPage);
-    const total = await User.countDocuments();
-    if (includes) {
-      const fields = includes.split(",");
-      users = users.map((user) => {
-        const filteredUser = {};
-        fields.forEach((field) => {
-          if (!user.hasOwnProperty(field)) {
-            filteredUser[field] = user[field];
-          }
-        });
-        return filteredUser;
-      });
-    }
-    return res.json({
-      data: users,
-      _meta: {
-        currentPage: +req.query.page,
-        perPage: +req.query.perPage,
-        totalCount: total,
-        pageCount: Math.ceil(total / req.query.perPage),
-      },
-    });
+    const data = await paginate(User, req.query, 'users', 'role')
+    return res.json(data);
   } catch (err) {
     return res.status(500).json(err);
   }
@@ -117,97 +94,14 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-const updateRecipientBalance = (type, amount, recipient) => {
-  if (type == 2) {
-    recipient.cardBalance = recipient.cardBalance + amount;
-    return recipient;
-  } else if (type == 3) {
-    recipient.cashBalance = recipient.cashBalance + amount;
-    return recipient;
-  } else if (type == 4) {
-    recipient.balance = recipient.balance + amount;
-    return recipient;
-  } else {
-    throw new Error("Invalid balance type!")
-  }
-};
-
 exports.updateUserBalance = async (req, res) => {
   try {
-    const senderType = req.body.senderPaymentType;
-    const recipientType = req.body.recipientPaymentType;
-    const amount = parseInt(req.body.amount);
-
-    const sender = await User.findById(req.body.sender);
-    if (!sender) {
-      return res.status(404).json({
-        message: "Sender not found",
-      });
-    }
-
-    const recipient = await User.findById(req.body.recipient);
-    if (!recipient) {
-      return res.status(404).json({
-        message: "Recipient not found",
-      });
-    }
-
-    if (senderType == 2) {
-      if (sender.cardBalance < amount) {
-        return res.json({
-          message: "There are insufficient funds in the payer's balance",
-        });
-      }
-      sender.cardBalance = sender.cardBalance - amount;
-      await sender.save();
-      const updatedRecipient = updateRecipientBalance(
-        recipientType,
-        amount,
-        recipient
-      );
-      updatedRecipient.save();
-      return res.json({
-        message: "Success",
-      });
-    } else if (senderType == 3) {
-      if (sender.cashBalance < amount) {
-        return res.json({
-          message: "There are insufficient funds in the payer's balance",
-        });
-      }
-      sender.cashBalance = sender.cashBalance - amount;
-      await sender.save();
-      const updatedRecipient = updateRecipientBalance(
-        recipientType,
-        amount,
-        recipient
-      );
-      updatedRecipient.save();
-      return res.json({
-        message: "Success",
-      });
-    } else if (senderType == 4) {
-      if (sender.balance < amount) {
-        return res.json({
-          message: "There are insufficient funds in the payer's balance",
-        });
-      }
-      sender.balance = sender.balance - amount;
-      await sender.save();
-      const updatedRecipient = updateRecipientBalance(
-        recipientType,
-        amount,
-        recipient
-      );
-      updatedRecipient.save();
-      return res.json({
-        message: "Success",
-      });
-    }
-
+    const { senderType, recipientType, sum, sender, recipient } = req.body;
+    await updateBalance(sender, senderType, sum, "Balansdan balancga pul otkazdik");
+    await addBalance(recipient, recipientType, sum, "Balansdan balancga pul otkazdik");
     return res.json({
-      message: "Error",
-    });
+      message: "Success"
+    })
   } catch (err) {
     return res.json(err);
   }

@@ -1,4 +1,3 @@
-// Import necessary models and utilities
 const Party = require("../models/Party");
 const Users = require("../models/User");
 const Products = require("../models/Products");
@@ -10,8 +9,8 @@ const pagination = require("../utils/pagination");
 
 exports.get = async (req, res) => {
   try {
-    if(!req.query.filter) {
-      req.query.filter = {}
+    if (!req.query.filter) {
+      req.query.filter = {};
     }
     req.query.filter.deleted = false;
     const data = await pagination(
@@ -26,10 +25,10 @@ exports.get = async (req, res) => {
     );
 
     for (product of data.data) {
-      let total = 0
+      let total = 0;
       for (productData of product.products) {
         await productData.populate("unit");
-        total += (productData.amount * productData.price);
+        total += productData.amount * productData.price;
         productData._doc.productData = {
           name: productData.name,
           price: productData.price,
@@ -37,7 +36,7 @@ exports.get = async (req, res) => {
           unit: productData.unit,
           _id: productData._id,
         };
-        product._doc.total = total
+        product._doc.total = total;
       }
     }
     return res.json(data);
@@ -46,27 +45,32 @@ exports.get = async (req, res) => {
   }
 };
 
-// Controller function to generate a unique party ID
+exports.byId = async (req, res) => {
+  try {
+    const data = await Party.findById(req.params.id)
+      .populate(["products", "warehouse", "client", "logistic", "user"]);
+      return res.json({
+        data,
+      })
+  } catch (err) {
+    return res.status(400).json(err);
+  }
+};
+
 exports.generatePartyId = async (req, res) => {
   try {
-    // Find all parties
     const party = await Party.find();
-    // Generate a unique ID
     const id = generateId(party);
-    // Send response with the generated ID
     return res.json({
       id: id,
     });
   } catch (err) {
-    // Handle errors
     return res.json(err);
   }
 };
 
-// Controller function to add a new party
 exports.addParty = async (req, res) => {
   try {
-    // Extract request body data
     const {
       id,
       client,
@@ -82,7 +86,6 @@ exports.addParty = async (req, res) => {
       total,
     } = req.body;
 
-    // Create a new Party instance
     let newParty = new Party({
       id,
       client,
@@ -98,14 +101,11 @@ exports.addParty = async (req, res) => {
       user: req.headers.userId,
     });
 
-    // Save the new party
     await newParty.save();
 
-    // Update client's indebtedness
     const findClient = await Clients.findById(client);
     findClient.indebtedness += total;
     await findClient.save();
-    // Add products to the party
     const productIds = [];
     for (let productData of products) {
       const lastItem = await Products.find();
@@ -130,11 +130,9 @@ exports.addParty = async (req, res) => {
       await newProduct.save();
       productIds.push(newProduct._id);
     }
-    // Update party's products
     newParty.products = productIds;
     await newParty.save();
     newParty = await newParty.populate("products");
-    // Notify users about the new party
     const findUser = await Users.findById(req.headers.userId);
     const users = await Users.find({ bot: true, deleted: false, active: true });
 
@@ -145,13 +143,10 @@ exports.addParty = async (req, res) => {
       }
     });
 
-    // Send response with added party data
     return res.json({
       data: newParty,
     });
   } catch (err) {
-    // Handle errors
-    console.log(err);
     return res.status(500).json(err);
   }
 };
@@ -204,30 +199,23 @@ exports.updateParty = async (req, res) => {
   }
 };
 
-// Controller function to update party status
 exports.updateStatus = async (req, res) => {
   try {
-    // Extract party ID from request parameters
     const { id } = req.params;
-    // Find party by ID
     const findParty = await Party.findById(id);
-    // If party doesn't exist, return 404 error
     if (!findParty) {
       return res.status(404).json({
         status: 404,
         message: "Party Not Found",
       });
     }
-    // Update party status
     findParty.status = req.body.status;
     await findParty.save();
-    // Send response with updated party data
     return res.json({
       message: "Party status updated successfully",
       data: findParty,
     });
   } catch (err) {
-    // Handle errors
     return res.json({
       message: "Internal Server Error",
     });
@@ -270,14 +258,24 @@ exports.deleteParty = async (req, res) => {
         message: "Party Not Found",
       });
     }
+    for (product of findParty.products) {
+      const findProduct = await Products.findById(product._id);
+      findProduct.deleted = true;
+      findProduct.deletedAt = new Date();
+    }
+    findParty.deleted = true;
+    findParty.deletedAt = new Date();
     const findClient = await Clients.findById(findParty.client);
     if (!findClient) {
       return res.status(404).json({
-        message: "Client NOt Found!",
+        message: "Client Not Found!",
       });
     }
     findClient.indebtedness -= findParty.totalSum;
     await findClient.save();
+    return res.json({
+      message: "Party deleted"
+    })
   } catch (err) {
     return res.status(400).json(err);
   }

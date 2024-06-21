@@ -1,4 +1,3 @@
-// Zaruratli modellar va utilitalarni import qilish
 const Products = require("../models/Products");
 const SaledProducts = require("../models/saledProducts");
 const Party = require("../models/Party");
@@ -9,55 +8,42 @@ const pagination = require("../utils/pagination");
 const generateId = require("../utils/generateId");
 const bot = require("../bot");
 
-// Barcha mahsulotlarni olish uchun nazorat funksiyasi
 exports.getAll = async (req, res) => {
   try {
     req.query.filter = { saled: false, ...req.query.filter };
     const data = await pagination(Products, req.query, "products", "parties");
     return res.json(data);
   } catch (err) {
-    // Xatolarni qaytarish
     return res.json(err);
   }
 };
 
-// Barcha unikal mahsulotlarni olish uchun nazorat funksiyasi
 exports.getUniqueProducts = async (req, res) => {
   try {
     const data = await pagination(Products, req.query, "products", "parties");
-    // Mahsulotlarni sanab, tartiblash
     data.data = data.data.sort((a, b) => a.createdAt - b.createdAt);
-    // Unikal mahsulotlarni aniqlash
     data.data = [...new Set(data.data.map((p) => p.name))].map((name) =>
       data.data.find((p) => p.name === name)
     );
-    // Ma'lumotlarni JSON ko'rinishida qaytarish
     res.json(data);
   } catch (err) {
-    // Xatolarni qaytarish
     return res.json(err);
   }
 };
 
-// Mahsulotni ID boyicha topish uchun nazorat funksiyasi
 exports.findById = async (req, res) => {
   try {
-    // So'rov parametrlarini ajratib olish
     const { id } = req.params;
-    // Mahsulotni topish
     const findProduct = await Products.findById(id).populate("parties");
-    // Agar mahsulot topilmasa
     if (!findProduct) {
       return res.status(404).json({
         message: "Mahsulot topilmadi",
       });
     }
-    // Ma'lumotlarni JSON ko'rinishida qaytarish
     return res.json({
       data: findProduct,
     });
   } catch (err) {
-    // Xatolarni qaytarish
     return res.json(err);
   }
 };
@@ -75,24 +61,19 @@ exports.generateInvoice = async (req, res) => {
   };
 };
 
-// Mahsulotlarni sotib olish uchun nazorat funksiyasi
 exports.SaleProduct = async (req, res) => {
   try {
-    // So'rovdan mahsulotlarni olish
     const { products } = req.body;
     const errors = [];
     const updatedProducts = [];
     const findClient = await Client.findById(req.body.client);
 
-    // Har bir mahsulot uchun sotib olishni amalga oshirish
     for (let product of products) {
       const findProduct = await Products.findById(product.id);
-      // Agar mahsulot topilmasa
       if (!findProduct) {
         errors.push(`ID si ${product.id} bo'lgan mahsulot topilmadi`);
         continue;
       }
-      // Mahsulot miqdorini va narxini yangilash
       if (findProduct.amount > product.amount) {
         findProduct.saledAmount = product.amount;
         findProduct.amount = findProduct.amount - product.amount;
@@ -152,7 +133,6 @@ exports.SaleProduct = async (req, res) => {
       }
     }
 
-    // Agar xatolar bo'lsa
     if (errors.length > 0) {
       return res.status(500).json({
         message: "So'rovni bajarishda xatolik yuz berdi",
@@ -160,7 +140,6 @@ exports.SaleProduct = async (req, res) => {
       });
     }
 
-    // Sotib olingan mahsulotlar uchun yangilangan mahsulotlarni olish
     const saledProducts = await SaledProducts.find();
     const saledProduct = await SaledProducts.create({
       id: req.body.id ? req.body.id : generateId(saledProducts),
@@ -173,7 +152,6 @@ exports.SaleProduct = async (req, res) => {
       products: updatedProducts,
     });
     req.body.dept = true
-    // Agar borc mavjud bo'lsa
     if (req.body.dept) {
       if (findClient.balance >= req.body.totalSum) {
         findClient.balance = findClient.balance - req.body.totalSum;
@@ -192,7 +170,6 @@ exports.SaleProduct = async (req, res) => {
         });
       }
     } else {
-      // Agar yetarli mablag' bo'lmagan bo'lsa
       if (findClient.balance < req.body.totalSum) {
         return res.json({
           message: "Mijoz balansida yetarli mablag' yo'q",
@@ -202,12 +179,10 @@ exports.SaleProduct = async (req, res) => {
       await findClient.save();
     }
 
-    // Yangilangan mahsulotlar uchun saqlash
     for (let updated of updatedProducts) {
       await updated.save();
     }
 
-    // Partiyalarni olish va tekshirish
     const parties = await Party.find({ deleted: false, saled: false }).populate(
       {
         path: "products",
@@ -236,12 +211,10 @@ exports.SaleProduct = async (req, res) => {
     //   }
     // });
 
-    // Ma'lumotlarni JSON ko'rinishida qaytarish
     return res.status(200).json({
       message: "Mahsulotlar muvaffaqiyatli sotildi",
     });
   } catch (err) {
-    // Xatolarni qaytarish
     return res.status(500).json({
       message: "Ichki server xatosi",
       error: err.message,
@@ -249,68 +222,74 @@ exports.SaleProduct = async (req, res) => {
   }
 };
 
-// Omborlardan omborga mahsulotlarni ko'chirish uchun nazorat funksiyasi
 exports.transfer = async (req, res) => {
   try {
-    // Mahsulotlar uchun bo'sh array
-    const newProducts = [];
-    // Har bir mahsulot uchun ko'chirishni amalga oshirish
-    for (product of req.body.products) {
-      const findProduct = await Products.findById(product.id);
-      if (findProduct.amount == product.amount) {
-        findProduct.warehouse = product.warehouse;
-        const history = {
-          warehouse: product.warehouse,
-          createdAt: new Date(),
-        };
-        findProduct.history.push(history);
-        findProduct.amount = 0;
-        findProduct.transfer = product.amount;
-        newProducts.push(findProduct);
-      } else if (findProduct.amount > product.amount) {
-        const history = {
-          warehouse: product.warehouse,
-          createdAt: new Date(),
-        };
-        findProduct.transfer = product.amount;
-        findProduct.amount = findProduct.amount - product.amount;
-        findProduct.history.push(history);
-        findProduct.warehouse = product.warehouse;
-        newProducts.push(findProduct);
+    let { amount, warehouse } = req.body;
+    amount = parseInt(amount)
+    const findProduct = await Products.findById(req.params.id);
+    if(amount > findProduct.amount) {
+      return res.status(400).json({
+        message: "t(Ko'chirish miqdori mahsuloq miqdoridan ko'p)"
+      });
+    }
+
+    if(findProduct.amount == amount) {
+      findProduct.history.push({
+        warehouse: findProduct.warehouse,
+        createdAt: new Date(),
+      });
+      findProduct.warehouse = warehouse
+      await findProduct.save();
+    } else if (findProduct.amount > amount) {
+      findProduct.amount -= amount
+      await findProduct.save();
+
+      const findParty = await Party.findById(findProduct.parties);
+      delete findParty._doc._id
+      delete findParty._doc.products;
+      findParty.warehouse = warehouse;
+
+      findProduct.saledAmount = 0
+      const products = await Products.find();
+      findProduct.id = generateId(products);
+      findProduct.warehouse = warehouse;
+      
+      const findCopied = await Products.findOne({ copy: findProduct._id })
+      console.log(findCopied);
+      if(findCopied) {
+        findCopied.amount += amount
+        await findCopied.save();
       } else {
-        // Agar mahsulot miqdori yetarli bo'lmasa
-        return res.status(500).json({
-          message: "Ko'chirish miqdori mahsulot miqdoridan ko'p",
+        const newParty = await Party.create({
+          ...findParty._doc
+        })
+        findProduct.parties = newParty._id
+        findProduct.amount = amount
+        const findProductId = findProduct._id
+        delete findProduct._doc._id
+        const newProduct = new Products({
+          ...findProduct._doc,
+          copy: findProductId
         });
+  
+        newParty.products.push(newProduct._id)
+        await newParty.save();
+        await newProduct.save();
       }
     }
 
-    // Yangi mahsulotlar uchun saqlash
-    for (product of newProducts) {
-      await product.save();
-      const products = await Products.find();
-      const { _id, ...productData } = product._doc;
-      productData.id = generateId(products);
-      productData.amount = product.transfer;
-      await Products.create(productData);
-    }
-
-    // Ma'lumotlarni JSON ko'rinishida qaytarish
     return res.json({
-      message: "Mahsulotlar muvaffaqiyatli ko'chirildi.",
-    });
+      message: "Success"
+    })
   } catch (err) {
-    // Xatolarni qaytarish
+    console.log(err);
     return res.json(err);
   }
 };
 
-// Mahsulotlarni o'chirish uchun nazorat funksiyasi
 exports.destruction = async (req, res) => {
   try {
-    // Mahsulotni topish
     const findProduct = await Products.findById(req.body.id);
-    // Agar mahsulot topilmasa
     if (findProduct.amount == req.body.amount) {
       findProduct.deleted = true;
       findProduct.deletedAt = new Date();
@@ -319,17 +298,14 @@ exports.destruction = async (req, res) => {
       findProduct.amount -= req.body.amount;
       await findProduct.save();
     } else {
-      // Agar mahsulot miqdori yetarli bo'lmasa
       return res.status(500).json({
         message: "Ko'chirish miqdori mahsulot miqdoridan ko'p",
       });
     }
-    // Ma'lumotlarni JSON ko'rinishida qaytarish
     return res.json({
       message: "Mahsulotlar muvaffaqiyatli o'chirildi",
     });
   } catch (err) {
-    // Xatolarni qaytarish
     return res.json(err);
   }
 };

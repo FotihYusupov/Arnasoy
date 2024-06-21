@@ -15,7 +15,10 @@ const ExpensesSchema = new mongoose.Schema(
       type: String,
     },
     sum: {
-      type: String,
+      type: Number,
+    },
+    balanceType: {
+      type: Number
     },
     user: {
       type: mongoose.Types.ObjectId,

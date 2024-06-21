@@ -72,27 +72,22 @@ exports.updateClient = async (req, res) => {
 
 exports.updateClientBalanceAndPayDebt = async (req, res) => {
   try {
-    const { balanceType, sum, invoice, invoiceDate } = req.body;
+    const { balanceType, sum, invoice, invoiceDate, createdDate, comment } = req.body;
     const userId = req.headers.userId;
     const clientId = req.params.id;
 
-    // Add balance update
     await addBalance(userId, balanceType, sum, "Client qarzini berganda.");
 
-    // Find client
     const findClient = await Client.findById(clientId);
     if (!findClient) {
       return res.status(404).json({ message: "Client Not Found!" });
     }
 
-    // Initialize remaining sum
     let remainingSum = parseInt(sum);
 
-    // Retrieve all debts of the client
     let debts = await Dept.find({ clients: clientId }).sort({ _id: 1 }); // Sort by _id to ensure paying off from oldest to newest
     const updatedDebts = [];
 
-    // Pay off debts
     for (let debt of debts) {
       if (remainingSum <= 0) break;
       if (debt.sum <= remainingSum) {
@@ -106,11 +101,9 @@ exports.updateClientBalanceAndPayDebt = async (req, res) => {
       updatedDebts.push(debt);
     }
 
-    // Add remaining sum to the client's balance
     findClient.balance += remainingSum;
     await findClient.save();
 
-    // Save updated debts
     for (let debt of updatedDebts) {
       await debt.save();
     }
@@ -118,10 +111,13 @@ exports.updateClientBalanceAndPayDebt = async (req, res) => {
     await DeptHistory.create({
       client: clientId,
       user: userId,
+      type: 1,
       amount: sum,
       paymentType: balanceType,
       invoice: invoice,
       invoiceDate: invoiceDate,
+      createdDate: createdDate,
+      comment: comment
     });
 
     return res.json({
@@ -129,13 +125,22 @@ exports.updateClientBalanceAndPayDebt = async (req, res) => {
       data: findClient,
     });
   } catch (err) {
-    console.log(err);
     return res.status(500).json(err);
+  }
+};
+
+exports.generateInv = async (req, res) => {
+  try {
+    const history = await DeptHistory.find();
+    return res.json({ data: history[history.length - 1].invNum + 1 || 1 });
+  } catch (err) {
+    return res.status(400).json(err);
   }
 };
 
 exports.moneyOut = async (req, res) => {
   try {
+    const { balanceType, sum, invoice, invoiceDate, createdDate, comment } = req.body;
     const findClient = await Client.findById(req.params.id);
     if (!findClient) {
       return res.status(404).json({
@@ -144,17 +149,30 @@ exports.moneyOut = async (req, res) => {
     }
     await updateBalance(
       req.headers.userId,
-      req.body.balanceType,
-      req.body.amount,
+      balanceType,
+      sum,
       "Clientga qarzimizni berdik."
     );
-    findClient.indebtedness -= req.body.sum;
+    findClient.indebtedness -= sum;
     await findClient.save();
+
+    await DeptHistory.create({
+      client: findClient._id,
+      user: req.headers.userId,
+      type: 2,
+      amount: sum,
+      paymentType: balanceType,
+      invoice: invoice,
+      invoiceDate: invoiceDate,
+      createdDate: createdDate,
+      comment: comment
+    });
+
     return res.json({
-      message: "Success",
+      message: findClient,
     });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json(err);
   }
 };
 

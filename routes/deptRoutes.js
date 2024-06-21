@@ -4,7 +4,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const deptRoutes = Router();
 
+deptRoutes.get("/history", authMiddleware, deptController.getHistory);
 deptRoutes.get("/:id", authMiddleware, deptController.getById);
-deptRoutes.get("/history/:id", authMiddleware, deptController.getHistory);
 
 module.exports = deptRoutes;

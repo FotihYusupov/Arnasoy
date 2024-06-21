@@ -11,5 +11,6 @@ satisfactionRoutes.post("/product/:id", authMiddleware, satisfactionController.a
 satisfactionRoutes.post("/", authMiddleware, satisfactionController.expenses);
 satisfactionRoutes.put("/expenses/:id", authMiddleware, satisfactionController.updateExpenses);
 satisfactionRoutes.put("/:id", authMiddleware, satisfactionController.updateSatisfaction);
+satisfactionRoutes.delete("/:id", authMiddleware, satisfactionController.deleteExpense)
 
 module.exports = satisfactionRoutes;

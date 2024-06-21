@@ -47,6 +47,9 @@ const ProductsSchema = new mongoose.Schema(
         },
       },
     ],
+    copy: {
+      type: mongoose.Types.ObjectId,
+    },
     deleted: {
       type: Boolean,
       default: false,

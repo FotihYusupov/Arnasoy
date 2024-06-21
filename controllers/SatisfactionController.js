@@ -36,7 +36,6 @@ exports.getAll = async (req, res) => {
 
 exports.addSatisfaction = async (req, res) => {
   req.body.price = parseInt(req.body.price)
-  console.log(req.body);
   try {
     const findParty = await Party.findById(req.params.id).populate("products");
     if (!findParty) {
@@ -107,18 +106,21 @@ exports.addSatisfactionProduct = async (req, res) => {
       message: newSatisfaction,
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json(err);
   }
 };
 
 exports.expenses = async (req, res) => {
   try {
+    console.log(req.body);
     const expenses = await Expenses.find();
     const newExpense = new Expenses({
       id: generateId(expenses),
       type: req.body.type,
       expComment: req.body.expComment ? req.body.expComment : "",
-      sum: req.body.sum,
+      sum: parseInt(req.body.price),
+      balanceType: req.body.balanceType,
       user: req.headers.userId,
     });
     await newExpense.save();
@@ -129,6 +131,7 @@ exports.expenses = async (req, res) => {
       data: newExpense,
     });
   } catch (err) {
+    console.log(err);
     return res.status(400).json(err);
   }
 };
@@ -160,6 +163,7 @@ exports.updateSatisfaction = async (req, res) => {
       data: findSatisfaction,
     });
   } catch (err) {
+    console.log(err);
     return res.status(400).json(err);
   };
 };
@@ -203,11 +207,12 @@ exports.deleteExpense = async (req, res) => {
         message: "Expense Not Found!"
       });
     }
-    await addBalance(req.headers.userId, req.body.balanceType, findExpense.sum, "Oylik rasxod bekor qilindi");
+    await addBalance(req.headers.userId, findExpense.balanceType, findExpense.sum, "Oylik rasxod bekor qilindi");
     return res.json({
       message: "Expense deleted!",
     });
   } catch (err) {
+    console.log(err);
     return res.status(400).json(err);
   };
 };

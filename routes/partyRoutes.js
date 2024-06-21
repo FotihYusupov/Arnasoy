@@ -6,6 +6,7 @@ const partyRoutes = Router();
 
 partyRoutes.get('/', authMiddleware, partyController.get)
 partyRoutes.get("/generate-id", authMiddleware, partyController.generatePartyId);
+partyRoutes.get("/:id", authMiddleware, partyController.byId);
 partyRoutes.post("/", authMiddleware, partyController.addParty);
 partyRoutes.put("/:id", authMiddleware, partyController.updateParty);
 partyRoutes.put("/update-status/:id", authMiddleware, partyController.updateStatus);
