@@ -4,7 +4,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const clientRoutes = Router();
 
-clientRoutes.get("/", authMiddleware, clientController.getAll);
+clientRoutes.get("/all", authMiddleware, clientController.getAll);
 clientRoutes.get("/invoice", clientController.generateInv);
 // clientRoutes.get("/:id", authMiddleware, clientController.byId);
 clientRoutes.post("/", authMiddleware, clientController.addClient);

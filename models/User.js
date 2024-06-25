@@ -84,6 +84,10 @@ const UserSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    salary: {
+      type: Number,
+      default: 0,
+    },
     deleted: {
       type: Boolean,
       default: false,

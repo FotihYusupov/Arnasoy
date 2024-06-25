@@ -51,7 +51,6 @@ exports.updateRole = async (req, res) => {
   }
 };
 
-
 exports.deleteRole = async (req, res) => {
   try {
     const { id } = req.params;

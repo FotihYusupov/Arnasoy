@@ -13,7 +13,7 @@ const SaledProductsSchema = new mongoose.Schema({
     unique: true
   },
   invoiceDate: {
-    type: Date,
+    type: String,
   },
   client: {
     type: mongoose.Types.ObjectId,
@@ -21,11 +21,15 @@ const SaledProductsSchema = new mongoose.Schema({
   },
   user: {
     type: mongoose.Types.ObjectId,
-    ref: "user",
+    ref: "users",
   },
   warehouse: {
     type: mongoose.Types.ObjectId,
     ref: "warehouse",
+  },
+  sum: {
+    type: Number,
+    required: true,
   },
   comment: {
     type: String,

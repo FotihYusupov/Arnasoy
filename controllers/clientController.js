@@ -1,28 +1,104 @@
 const Client = require("../models/Client");
+const User = require("../models/User");
 const Dept = require("../models/Debt");
 const DeptHistory = require("../models/DeptHistory");
 const generateId = require("../utils/generateId");
 const paginate = require("../utils/pagination");
 const { addBalance, updateBalance } = require("../utils/updateBalance");
 
+const URL = process.env.SERVER_URL;
+
+const sortFn = (sort) => {
+  let sortOption = [];
+  if (sort) {
+    const sortFields = sort.split(",");
+    sortFields.forEach((field) => {
+      const sortOrder = field.startsWith("-") ? -1 : 1;
+      const fieldName = field.replace(/^-/, "");
+      sortOption.push({ fieldName, sortOrder });
+    });
+  }
+  return sortOption;
+};
+
+const paginateItems = (items, query, route) => {
+  try {
+    const { page = 1, perPage = 10, includes, sort, filterKey, filterValue } = query;
+
+    // Filter items based on query
+    if (filterKey && filterValue !== undefined) {
+      items = items.filter(item => item[filterKey] === filterValue);
+    }
+
+    // Check if items include a specific value
+    if (query.includesKey && query.includesValue !== undefined) {
+      items = items.filter(item => item[query.includesKey].includes(query.includesValue));
+    }
+
+    // Sort items based on query
+    const sortOption = sortFn(sort);
+    if (sortOption.length > 0) {
+      items.sort((a, b) => {
+        for (let option of sortOption) {
+          if (a[option.fieldName] < b[option.fieldName]) return -1 * option.sortOrder;
+          if (a[option.fieldName] > b[option.fieldName]) return 1 * option.sortOrder;
+        }
+        return 0;
+      });
+    }
+
+    const totalCount = items.length;
+    const totalPages = Math.ceil(totalCount / perPage);
+
+    // Paginate items
+    const startIndex = (page - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    const paginatedItems = items.slice(startIndex, endIndex);
+
+    return {
+      data: paginatedItems,
+      _meta: {
+        currentPage: +page,
+        perPage: +perPage,
+        totalCount,
+        totalPages,
+      },
+      _links: {
+        self: `${URL}${route}?page=${page}&perPage=${perPage}`,
+        first: `${URL}${route}?page=1&perPage=${perPage}`,
+        prev: page > 1 ? `${URL}${route}?page=${+page - 1}&perPage=${perPage}` : null,
+        next: page < totalPages ? `${URL}${route}?page=${+page + 1}&perPage=${perPage}` : null,
+        last: `${URL}${route}?page=${totalPages}&perPage=${perPage}`,
+      },
+    };
+  } catch (error) {
+    return {
+      message: "Error occurred while paginating results",
+      error: error.message,
+    };
+  }
+};
+
 exports.getAll = async (req, res) => {
   try {
-    if (!req.query.filter) {
-      req.query.filter = {};
-    }
-    req.query.filter.deleted = false;
-    const data = await paginate(
-      Client,
-      req.query,
-      "clients",
-      "category",
-      "group"
-    );
-    return res.json(data);
+    const clients = await Client.find({deleted: false}).populate("category", "group");
+    const users = await User.find({deleted: false});
+    const data = [...clients, ...users];
+    const paginatedData = paginateItems(data, req.query, "clients")
+    return res.json(paginatedData);
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.getClients = async (req, res) => {
+  try {
+    const data = await paginate(Client, req.query, "clients", "category", "group");
+    return res.json(data);
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
 
 exports.byId = async (req, res) => {
   try {

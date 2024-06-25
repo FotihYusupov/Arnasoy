@@ -4,6 +4,7 @@ const Party = require("../models/Party");
 const Client = require("../models/Client");
 const Users = require("../models/User");
 const Dept = require("../models/Debt");
+const TransferHistory = require("../models/TransferHistory");
 const pagination = require("../utils/pagination");
 const generateId = require("../utils/generateId");
 const bot = require("../bot");
@@ -20,6 +21,9 @@ exports.getAll = async (req, res) => {
 
 exports.getUniqueProducts = async (req, res) => {
   try {
+    if(!req.query.filter) req.query.filter = {};
+    req.query.filter.saled = false;
+    req.query.deleted = false;
     const data = await pagination(Products, req.query, "products", "parties");
     data.data = data.data.sort((a, b) => a.createdAt - b.createdAt);
     data.data = [...new Set(data.data.map((p) => p.name))].map((name) =>
@@ -150,7 +154,9 @@ exports.SaleProduct = async (req, res) => {
       comment: req.body.comment,
       user: req.headers.userId,
       products: updatedProducts,
+      sum: req.body.totalSum,
     });
+
     req.body.dept = true
     if (req.body.dept) {
       if (findClient.balance >= req.body.totalSum) {
@@ -186,7 +192,7 @@ exports.SaleProduct = async (req, res) => {
     const parties = await Party.find({ deleted: false, saled: false }).populate(
       {
         path: "products",
-        match: { saled: false },
+        match: { saled: false, deleted: false },
       }
     );
 
@@ -215,6 +221,7 @@ exports.SaleProduct = async (req, res) => {
       message: "Mahsulotlar muvaffaqiyatli sotildi",
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       message: "Ichki server xatosi",
       error: err.message,
@@ -224,7 +231,7 @@ exports.SaleProduct = async (req, res) => {
 
 exports.transfer = async (req, res) => {
   try {
-    let { amount, warehouse } = req.body;
+    let { amount, warehouse, transportNumber } = req.body;
     amount = parseInt(amount)
     const findProduct = await Products.findById(req.params.id);
     if(amount > findProduct.amount) {
@@ -232,6 +239,16 @@ exports.transfer = async (req, res) => {
         message: "t(Ko'chirish miqdori mahsuloq miqdoridan ko'p)"
       });
     }
+
+    const newHistory = new TransferHistory({
+      oldWarehouse: findProduct.warehouse,
+      newWarehouse: warehouse,
+      user: req.headers.userId,
+      transportNumber: transportNumber || "",
+      amount: amount,
+      oldParty: findProduct.parties,
+
+    })
 
     if(findProduct.amount == amount) {
       findProduct.history.push({
@@ -255,10 +272,12 @@ exports.transfer = async (req, res) => {
       findProduct.warehouse = warehouse;
       
       const findCopied = await Products.findOne({ copy: findProduct._id })
-      console.log(findCopied);
       if(findCopied) {
         findCopied.amount += amount
         await findCopied.save();
+
+        newHistory.newParty = findCopied.parties
+        await newHistory.save();
       } else {
         const newParty = await Party.create({
           ...findParty._doc
@@ -275,6 +294,9 @@ exports.transfer = async (req, res) => {
         newParty.products.push(newProduct._id)
         await newParty.save();
         await newProduct.save();
+      
+        newHistory.newParty = newParty._id
+        await newHistory.save();
       }
     }
 

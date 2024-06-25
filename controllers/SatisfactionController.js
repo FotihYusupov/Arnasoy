@@ -163,7 +163,6 @@ exports.updateSatisfaction = async (req, res) => {
       data: findSatisfaction,
     });
   } catch (err) {
-    console.log(err);
     return res.status(400).json(err);
   };
 };

@@ -14,6 +14,9 @@ const balanceHistory = require("./balanceHistoryRoutes");
 const categoryRoutes = require("./categoryRoutes");
 const unitRoutes = require("./unitRoutes");
 const satisfactionTypeRoutes = require("./satisfactionTypeRoutes");
+const transferHistoryRoutes = require("./transferHisrtoryRoues");
+const saledProductRoutes = require("./saledProductRoutes");
+const salaryRoutes = require("./salaryRoutes");
 
 const router = Router();
 
@@ -32,5 +35,8 @@ router.use('/balance', balanceHistory);
 router.use('/categories', categoryRoutes);
 router.use('/units', unitRoutes);
 router.use('/satisfaction-type', satisfactionTypeRoutes);
+router.use('/transfer-history', transferHistoryRoutes);
+router.use('/saled-products', saledProductRoutes);
+router.use('/salary', salaryRoutes);
 
 module.exports = router;
