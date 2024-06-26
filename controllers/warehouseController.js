@@ -1,9 +1,21 @@
 const Warehouse = require("../models/Warehouse");
+const Products = require("../models/Products");
 const generateId = require("../utils/generateId");
 
 exports.getAll = async (req, res) => {
   try {
+    if(!req.query.filter) req.query.filter = {};
+    req.query.filter.deleted = false; 
     const warehouses = await Warehouse.find({ deleted: false });
+    for(warehouse of warehouses) {
+      let total = 0
+      const products = await Products.find({ warehouse: warehouse._id, deleted: false, saled: false });
+      console.log(products);
+      for(product of products) {
+        total += product.amount
+        warehouse._doc.total = total
+      }
+    }
     return res.json({
       data: warehouses,
     });

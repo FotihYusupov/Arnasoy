@@ -8,43 +8,34 @@ const { addBalance, updateBalance } = require("../utils/updateBalance");
 
 const URL = process.env.SERVER_URL;
 
-const sortFn = (sort) => {
-  let sortOption = [];
-  if (sort) {
-    const sortFields = sort.split(",");
-    sortFields.forEach((field) => {
-      const sortOrder = field.startsWith("-") ? -1 : 1;
-      const fieldName = field.replace(/^-/, "");
-      sortOption.push({ fieldName, sortOrder });
-    });
-  }
-  return sortOption;
-};
-
 const paginateItems = (items, query, route) => {
   try {
-    const { page = 1, perPage = 10, includes, sort, filterKey, filterValue } = query;
-
-    // Filter items based on query
-    if (filterKey && filterValue !== undefined) {
-      items = items.filter(item => item[filterKey] === filterValue);
-    }
-
-    // Check if items include a specific value
-    if (query.includesKey && query.includesValue !== undefined) {
-      items = items.filter(item => item[query.includesKey].includes(query.includesValue));
-    }
-
-    // Sort items based on query
-    const sortOption = sortFn(sort);
-    if (sortOption.length > 0) {
-      items.sort((a, b) => {
-        for (let option of sortOption) {
-          if (a[option.fieldName] < b[option.fieldName]) return -1 * option.sortOrder;
-          if (a[option.fieldName] > b[option.fieldName]) return 1 * option.sortOrder;
-        }
-        return 0;
+    const { page = 1, perPage = 10, includes, filter } = query;
+    if (includes) {
+      const fields = includes.split(",");
+      items = items.map((user) => {
+        const filteredUser = {};
+        fields.forEach((field) => {
+          if (!user.hasOwnProperty(field)) {
+            filteredUser[field] = user[field];
+          }
+        });
+        return filteredUser;
       });
+    }
+
+    if(filter) {
+      const filteredItems = []
+      const filteredItems2 = []
+      for(item of items) {
+        if(item[Object.keys(filter)[0]] == Object.values(filter)[0]) {
+          filteredItems.push(item)
+        }
+        if(item[Object.keys(filter)[1]] == Object.values(filter)[1]) {
+          filteredItems2.push(item)
+        }
+      }
+      items = [...filteredItems, ...filteredItems2];
     }
 
     const totalCount = items.length;
