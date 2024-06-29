@@ -4,7 +4,7 @@ const RoleSchema = new mongoose.Schema({
   id: {
     type: Number
   },
-  name: {
+  role: {
     type: String,
     required: true
   },

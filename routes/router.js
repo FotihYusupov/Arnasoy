@@ -1,4 +1,5 @@
 const { Router } = require("express");
+const translationRoutes = require("./translationRoutes")
 const roleRoutes = require("./roleRoutes");
 const userRoutes = require("./userRoutes");
 const currencyRoutes = require("./currencyRoutes");
@@ -38,5 +39,6 @@ router.use('/satisfaction-type', satisfactionTypeRoutes);
 router.use('/transfer-history', transferHistoryRoutes);
 router.use('/saled-products', saledProductRoutes);
 router.use('/salary', salaryRoutes);
+router.use('/trnaslations', translationRoutes)
 
 module.exports = router;

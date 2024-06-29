@@ -10,7 +10,7 @@ const URL = process.env.SERVER_URL;
 
 const paginateItems = (items, query, route) => {
   try {
-    const { page = 1, perPage = 10, includes, filter } = query;
+    const { page = 1, perPage = 10, includes, filter, sort } = query;
     if (includes) {
       const fields = includes.split(",");
       items = items.map((user) => {
@@ -24,18 +24,32 @@ const paginateItems = (items, query, route) => {
       });
     }
 
-    if(filter) {
-      const filteredItems = []
-      const filteredItems2 = []
-      for(item of items) {
-        if(item[Object.keys(filter)[0]] == Object.values(filter)[0]) {
-          filteredItems.push(item)
-        }
-        if(item[Object.keys(filter)[1]] == Object.values(filter)[1]) {
-          filteredItems2.push(item)
+    if (filter) {
+      const filteredItems = [];
+      const filterKeys = Object.keys(filter);
+      const filterValues = Object.values(filter);
+      for (const item of items) {
+        if (filterKeys.every((key, index) => item[key] == filterValues[index])) {
+          filteredItems.push(item);
         }
       }
-      items = [...filteredItems, ...filteredItems2];
+      items = filteredItems;
+    }
+
+    if (sort) {
+      let sortField = sort;
+      let sortDirection = "asc";
+
+      if (sort.startsWith("-")) {
+        sortField = sort.substring(1);
+        sortDirection = "desc";
+      }
+
+      items.sort((a, b) => {
+        if (a[sortField] < b[sortField]) return sortDirection === "desc" ? 1 : -1;
+        if (a[sortField] > b[sortField]) return sortDirection === "desc" ? -1 : 1;
+        return 0;
+      });
     }
 
     const totalCount = items.length;

@@ -9,7 +9,6 @@ module.exports = async (userId, amount, type, comment) => {
       throw new Error("User Not Found!");
     }
     const currentCurrency = await Currency.find({ date: new Date() });
-
     const newHistory = new BalanceHistory({
       user: findUser._id,
       amount: amount,

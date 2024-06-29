@@ -16,7 +16,7 @@ const PartySchema = new mongoose.Schema({
     type: String,
   },
   invoiceDate: {
-    type: String,
+    type: Number,
   },
   status: {
     type: Number,
@@ -33,7 +33,7 @@ const PartySchema = new mongoose.Schema({
     },
   ],
   departureDate: {
-    type: String,
+    type: Number,
   },
   transportNumber: {
     type: String,

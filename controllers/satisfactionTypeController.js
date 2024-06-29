@@ -12,6 +12,7 @@ exports.getAll = async (req, res) => {
 
 exports.add = async (req, res) => {
   try {
+    req.body.sum = parseInt(req.body.sum);
     const newType = new SatisfactionType({ ...req.body });
     await newType.save();
     return res.json(newType);

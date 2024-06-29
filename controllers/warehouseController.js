@@ -10,7 +10,6 @@ exports.getAll = async (req, res) => {
     for(warehouse of warehouses) {
       let total = 0
       const products = await Products.find({ warehouse: warehouse._id, deleted: false, saled: false });
-      console.log(products);
       for(product of products) {
         total += product.amount
         warehouse._doc.total = total

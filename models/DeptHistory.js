@@ -34,14 +34,14 @@ const DeptHistorySchema = new Schema({
     type: Number,
   },
   invoiceDate: {
-    type: String,
+    type: Number,
     required: true,
   },
   comment: {
     type: String,
   },
   createdDate: {
-    type: String,
+    type: Number,
   }
 }, {
   timestamps: true

@@ -52,6 +52,34 @@ exports.findById = async (req, res) => {
   }
 };
 
+exports.editPrice = async (req, res) => {
+  try {
+    const { products } = req.body;
+    const updatedProducts = [];
+    for (let product of products) {
+      const findProduct = await Products.findById(product.id);
+      if (!findProduct) {
+        return res.status(404).json({
+          message: "Mahsulot topilmadi",
+        });
+      }
+      findProduct.saledPrice = product.price;
+      updatedProducts.push(findProduct);
+    }
+
+    for (let product of updatedProducts) {
+      await product.save();
+    }
+
+    return res.status(200).json({
+      message: "Narhlar saqlandi",
+      data: updatedProducts,
+    });
+  } catch (err) {
+    return res.status(400).json(err);
+  }
+}
+
 exports.generateInvoice = async (req, res) => {
   try {
     const saleds = await SaledProducts.find();
@@ -64,6 +92,91 @@ exports.generateInvoice = async (req, res) => {
     return res.status(400).json(err);
   };
 };
+
+exports.getPrice = async (req, res) => {
+  try {
+    const { products } = req.body;
+
+    const updatedProducts = [];
+    const errors = [];
+
+    for (let product of products) {
+      const findProduct = await Products.findById(product.id);
+      if (!findProduct) {
+        errors.push(`ID si ${product.id} bo'lgan mahsulot topilmadi`);
+        continue;
+      }
+      if (findProduct.amount > product.amount) {
+        findProduct.saledAmount = product.amount;
+        findProduct.amount = findProduct.amount - product.amount;
+        findProduct.saledPrice = product.saledPrice || findProduct.saledPrice;
+        updatedProducts.push(findProduct);
+      } else if (findProduct.amount == product.amount) {
+        findProduct.saledAmount = product.amount;
+        findProduct.amount = 0;
+        findProduct.saledPrice = product.saledPrice;
+        findProduct.saled = true;
+        updatedProducts.push(findProduct);
+      } else if (findProduct.amount < product.amount) {
+        findProduct.saledAmount = product.amount;
+        let amount = product.amount - findProduct.amount;
+        findProduct.amount = 0;
+        findProduct.saled = true;
+        findProduct.saledPrice = product.saledPrice;
+        updatedProducts.push(findProduct);
+        for (let i = 0; i < products.length; i++) {
+          let newProducts = await Products.find({ _id: { $nin: ids } });
+          newProducts = [...new Set(newProducts.map((p) => p.name))].map(
+            (name) => newProducts.find((p) => p.name === name)
+          );
+          const newFindProduct = newProducts.find(
+            (e) => e.name === findProduct.name
+          );
+          if (newFindProduct) {
+            if (newFindProduct.amount > amount) {
+              newFindProduct.saledAmount = amount;
+              newFindProduct.amount = newFindProduct.amount - amount;
+              amount = 0;
+              newFindProduct.saledPrice = product.saledPrice;
+              updatedProducts.push(newFindProduct);
+            } else if (newFindProduct.amount == amount) {
+              newFindProduct.saledAmount = amount;
+              newFindProduct.amount = 0;
+              findProduct.saled = true;
+              amount = 0;
+              newFindProduct.saledPrice = product.saledPrice;
+              updatedProducts.push(newFindProduct);
+            } else if (newFindProduct.amount < amount) {
+              newFindProduct.saledAmount = newFindProduct.amount;
+              amount = amount - newFindProduct.amount;
+              newFindProduct.amount = 0;
+              newFindProduct.saled = true;
+              amount = amount - newFindProduct.amount;
+              ids.push(newFindProduct._id);
+              newFindProduct.saledPrice = product.saledPrice;
+              updatedProducts.push(newFindProduct);
+            }
+          } else {
+            break;
+          }
+        }
+      } else {
+        errors.push(`Mahsulot ID si ${product.id} uchun yetarli miqdor yo'q`);
+      }
+    }
+
+    let total = 0
+    for(product of updatedProducts) {
+      console.log(product.saledPrice * product.saledAmount);
+      total += product.saledPrice * product.saledAmount
+    }
+    return res.json({
+      total: total,
+    })
+  } catch (err) {
+    return res.status(400).json(err);
+  }
+}
 
 exports.SaleProduct = async (req, res) => {
   try {
@@ -202,26 +315,24 @@ exports.SaleProduct = async (req, res) => {
         await party.save();
       }
     }
-    // TODO Commentdan ochib qo'yish.
-    // Foydalanuvchi haqida ma'lumotlarni olish
-    // const findUser = await Users.findById(req.headers.userId);
-    // // Aktiv va o'chirilgan bot foydalanuvchilarni olish
-    // const users = await Users.find({ bot: true, deleted: false, active: true });
 
-    // // Barcha bot foydalanuvchilarga xabar yuborish
-    // users.forEach((user) => {
-    //   const messageText = `Sotib olingan mahsulotlar.\n id: ${saledProduct.id}\n foydalanuvchi: ${findUser.name} ${findUser.lastName}`;
-    //   if (user.chatId) {
-    //     bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {
-    //     });
-    //   }
-    // });
+    const findUser = await Users.findById(req.headers.userId);
+    // Aktiv va o'chirilgan bot foydalanuvchilarni olish
+    const users = await Users.find({ bot: true, deleted: false, active: true });
+
+    // Barcha bot foydalanuvchilarga xabar yuborish
+    users.forEach((user) => {
+      const messageText = `Sotib olingan mahsulotlar.\n id: ${saledProduct.id}\n foydalanuvchi: ${findUser.name} ${findUser.lastName}`;
+      if (user.chatId) {
+        bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {
+        });
+      }
+    });
 
     return res.status(200).json({
       message: "Mahsulotlar muvaffaqiyatli sotildi",
     });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       message: "Ichki server xatosi",
       error: err.message,
@@ -304,7 +415,6 @@ exports.transfer = async (req, res) => {
       message: "Success"
     })
   } catch (err) {
-    console.log(err);
     return res.json(err);
   }
 };

@@ -18,7 +18,7 @@ exports.getMe = async (req, res) => {
     const { userId } = req.headers;
     const { includes } = req.query;
 
-    const findUser = await User.findById(userId);
+    const findUser = await User.findById(userId).populate('role');
     if (!findUser || findUser.active === false) {
       return res.status(404).json({
         message: "User not found",

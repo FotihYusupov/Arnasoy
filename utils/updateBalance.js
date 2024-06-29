@@ -83,7 +83,6 @@ module.exports = {
       await user.save();
       return "Balance added successfully";
     } catch (err) {
-      console.log(err);
       throw new Error(err);
     }
   },

@@ -4,8 +4,8 @@ const Products = require("../models/Products");
 const Clients = require("../models/Client");
 const ProductCategories = require("../models/productCategory");
 const generateId = require("../utils/generateId");
-const bot = require("../bot");
 const pagination = require("../utils/pagination");
+const bot = require("../bot");
 
 exports.get = async (req, res) => {
   try {

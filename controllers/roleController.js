@@ -23,6 +23,7 @@ exports.addRole = async (req, res) => {
       data: newRole,
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

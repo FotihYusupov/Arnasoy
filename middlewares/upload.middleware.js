@@ -46,7 +46,7 @@ const uploadFile = (req, res, next) => {
             image.small = `${process.env.URL}${small}`
             files.push(image)
             req.images = files;
-            fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
+            // fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
           }
           break;
         case 'png':
@@ -65,7 +65,7 @@ const uploadFile = (req, res, next) => {
             image.small = `${process.env.URL}${small}`
             files.push(image)
             req.images = files;
-            fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
+            // fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
           }
           break;
         case 'webp':
@@ -84,7 +84,7 @@ const uploadFile = (req, res, next) => {
             image.small = `${process.env.URL}${small}`
             files.push(image)
             req.images = files;
-            fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
+            // fs.unlinkSync(`${process.cwd()}/${req.files[i].path}`);
           }
           break;
         default:

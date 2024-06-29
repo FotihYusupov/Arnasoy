@@ -10,7 +10,7 @@ const SatisfactionSchemaSchema = new mongoose.Schema({
     required: true,
   },
   sum: {
-    type: String,
+    type: Number,
   },
   deleted: {
     type: Boolean,

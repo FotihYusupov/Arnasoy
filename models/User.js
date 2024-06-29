@@ -30,7 +30,7 @@ const UserSchema = new mongoose.Schema(
       required: true,
     },
     arriveDate: {
-      type: Date,
+      type: Number,
     },
     role: {
       type: mongoose.Types.ObjectId,

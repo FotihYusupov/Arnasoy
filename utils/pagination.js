@@ -38,7 +38,14 @@
 
   const paginate = async (model, query, route, ...populateFields) => {
     try {
-      const { page = 1, perPage = 10, includes, sort, filter} = query;
+      const { page = 1, perPage = 10, includes, sort, filter, start, end} = query;
+
+      if (start || end) {
+        filter.createdAt = {};
+        if (start) filter.createdAt.$gte = new Date(start);
+        if (end) filter.createdAt.$lte = new Date(end);
+      }
+
       const sortOption = sortFn(sort);
       const selectFields = includes ? includes.replace(/,/g, " ") : "";
       const results = await model
@@ -54,6 +61,8 @@
 
       const totalCount = await model.countDocuments();
       const totalPages = Math.ceil(totalCount / perPage);
+
+
 
       return {
         data: populatedResults,
