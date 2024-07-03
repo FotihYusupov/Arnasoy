@@ -26,6 +26,10 @@ const balanceHistorySchema = new mongoose.Schema({
   comment: {
     type: String,
   },
+  historyType: {
+    type: Number,
+    required: true,
+  }
 }, {
   timestamps: true
 });

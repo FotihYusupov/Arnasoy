@@ -47,8 +47,14 @@ const ProductsSchema = new mongoose.Schema(
         },
       },
     ],
+    status: {
+      type: Number,
+    },
     copy: {
       type: mongoose.Types.ObjectId,
+    },
+    marja: {
+      type: Number,
     },
     deleted: {
       type: Boolean,

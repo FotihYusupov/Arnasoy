@@ -9,7 +9,7 @@ const SalarySchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    month: {
+    mouth: {
       type: String,
       required: true,
     },

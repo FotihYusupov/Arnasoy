@@ -52,7 +52,6 @@ exports.addUser = async (req, res) => {
       id: generateId(users),
       ...req.body,
     })
-    newUser.image = req.images ? req.images[0] : [];
     await newUser.save();
     return res.status(201).json({ data: newUser });
   } catch (err) {
@@ -78,16 +77,13 @@ exports.login = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    let updatedUser = await User.findById(id);
+    delete req.body.password
+    let updatedUser = await User.findByIdAndUpdate(id, { ...req.body }, {
+      new: true
+    });
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }
-    req.body.password = updatedUser.password
-    Object.assign(updatedUser, req.body);
-    if (req.image) {
-      updatedUser.image = req.image;
-    }
-    await updatedUser.save();
     return res.json({ data: updatedUser });
   } catch (err) {
     return res.status(500).json(err);

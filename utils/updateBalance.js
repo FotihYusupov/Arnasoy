@@ -41,7 +41,7 @@ module.exports = {
         default:
           throw new Error("Invalid balance type");
       }
-      await balanceHistory(userId, amount, balanceType, comment).catch(
+      await balanceHistory(userId, amount, balanceType, comment, 1).catch(
         (err) => {
           throw new Error(err);
         }
@@ -78,7 +78,7 @@ module.exports = {
           throw new Error("Invalid balance type");
       }
 
-      balanceHistory(userId, amount, balanceType, comment);
+      balanceHistory(userId, amount, balanceType, comment, 2);
 
       await user.save();
       return "Balance added successfully";

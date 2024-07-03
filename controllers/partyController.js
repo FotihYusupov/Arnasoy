@@ -1,11 +1,20 @@
 const Party = require("../models/Party");
-const Users = require("../models/User");
 const Products = require("../models/Products");
 const Clients = require("../models/Client");
 const ProductCategories = require("../models/productCategory");
-const generateId = require("../utils/generateId");
-const pagination = require("../utils/pagination");
-const bot = require("../bot");
+const { generateId, pagination, sendMessage, sendMessageToClient } = require("../utils")
+
+function formatDate(dateString) {
+  let date = new Date(dateString);
+  
+  let day = date.getDate().toString().padStart(2, '0');
+  let month = (date.getMonth() + 1).toString().padStart(2, '0');
+  let year = date.getFullYear();
+  let hours = date.getHours().toString().padStart(2, '0');
+  let minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+}
 
 exports.get = async (req, res) => {
   try {
@@ -47,11 +56,16 @@ exports.get = async (req, res) => {
 
 exports.byId = async (req, res) => {
   try {
-    const data = await Party.findById(req.params.id)
-      .populate(["products", "warehouse", "client", "logistic", "user"]);
-      return res.json({
-        data,
-      })
+    const data = await Party.findById(req.params.id).populate([
+      "products",
+      "warehouse",
+      "client",
+      "logistic",
+      "user",
+    ]);
+    return res.json({
+      data,
+    });
   } catch (err) {
     return res.status(400).json(err);
   }
@@ -106,7 +120,9 @@ exports.addParty = async (req, res) => {
     const findClient = await Clients.findById(client);
     findClient.indebtedness += total;
     await findClient.save();
+
     const productIds = [];
+
     for (let productData of products) {
       const lastItem = await Products.find();
       let findProductData = await ProductCategories.findById(
@@ -126,22 +142,21 @@ exports.addParty = async (req, res) => {
         warehouse: warehouse,
         dept: req.body.dept,
         parties: newParty._id,
+        status: status
       });
       await newProduct.save();
       productIds.push(newProduct._id);
     }
+
     newParty.products = productIds;
     await newParty.save();
-    newParty = await newParty.populate("products");
-    const findUser = await Users.findById(req.headers.userId);
-    const users = await Users.find({ bot: true, deleted: false, active: true });
+    newParty = await newParty.populate(["products"]);
 
-    users.forEach((user) => {
-      const messageText = `Yangi partiya qo'shildi.\n id: ${newParty.id}\n user: ${findUser.name} ${findUser.lastName}`;
-      if (user.chatId) {
-        bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {});
-      }
-    });
+    await sendMessage(
+      `Yangi partiya qo'shildi.\n\nId: ${newParty.id},\ninv: ${invoice},\nvaqti: ${formatDate(newParty.createdAt)},\nKontragent: ${findClient.name} ${findClient.lastName} \n`,
+      req.headers.userId
+    );
+    await sendMessageToClient(client, `Qarzdorlik.\nInvoys: ${newParty.invoice}\nOldin: ${findClient.indebtedness - total}$,\nKeyin: ${findClient.indebtedness}$`)
 
     return res.json({
       data: newParty,
@@ -274,8 +289,8 @@ exports.deleteParty = async (req, res) => {
     findClient.indebtedness -= findParty.totalSum;
     await findClient.save();
     return res.json({
-      message: "Party deleted"
-    })
+      message: "Party deleted",
+    });
   } catch (err) {
     return res.status(400).json(err);
   }

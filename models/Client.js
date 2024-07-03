@@ -63,6 +63,16 @@ const ClientSchema = new mongoose.Schema(
     dateBirth: {
       type: Number,
     },
+    bot: {
+      type: Boolean,
+      default: false,
+    },
+    username: {
+      type: String,
+    },
+    chatId: {
+      type: Number
+    },
     deleted: {
       type: Boolean,
       default: false,

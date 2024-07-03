@@ -65,7 +65,7 @@ exports.addSatisfaction = async (req, res) => {
     }
 
     const satisfactions = await Satisfaction.find();
-    const newSatisfaction = await Satisfaction.create({
+    const newSatisfaction = new Satisfaction({
       id: generateId(satisfactions),
       type: req.body.type,
       expComment: req.body.comment,
@@ -80,6 +80,9 @@ exports.addSatisfaction = async (req, res) => {
       req.body.price,
       "Partiya uchun Dop Rasxod"
     );
+
+    await newSatisfaction.save();
+
     return res.status(201).json({
       data: newSatisfaction,
     });
@@ -100,7 +103,7 @@ exports.addSatisfactionProduct = async (req, res) => {
     await findProduct.save();
 
     const satisfactions = await Satisfaction.find();
-    const newSatisfaction = await Satisfaction.create({
+    const newSatisfaction = new Satisfaction({
       id: generateId(satisfactions),
       type: req.body.type,
       expComment: req.body.expComment,
@@ -115,6 +118,8 @@ exports.addSatisfactionProduct = async (req, res) => {
       req.body.price,
       "Product uchun Dop Rasxod"
     );
+
+    new newSatisfaction.save()
 
     return res.json({
       message: newSatisfaction,

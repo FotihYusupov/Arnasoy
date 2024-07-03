@@ -11,13 +11,21 @@ function getCurrentDate() {
   return `${year}-${month}-${day}`;
 }
 
+function getYesterdayDate() {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  
+  const year = yesterday.getFullYear();
+  const month = (yesterday.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based, so add 1
+  const day = yesterday.getDate().toString().padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
 exports.getByDate = async (req, res) => {
   try {
     const lastDate = getLastWeek()[0];
-    const cbResponse = await axios.get(
-      "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
-    );
-    const cbData = cbResponse.data;
     const currentDate = getCurrentDate();
     const lastDateCurrency = await Currency.findOne({ date: lastDate });
     if (lastDateCurrency) {
@@ -25,9 +33,14 @@ exports.getByDate = async (req, res) => {
     }
     let currency = await Currency.findOne({ date: currentDate });
     if (!currency) {
+      const cbResponse = await axios.get(
+        "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
+      );
+      const cbData = cbResponse.data;
+      const lastCurrentCurrency = await Currency.findOne({ date: getYesterdayDate() })
       currency = new Currency({
         cb: cbData[0].Rate,
-        current: cbData[0].Rate,
+        current: lastCurrentCurrency.current,
         date: currentDate,
       });
       await currency.save();
@@ -35,7 +48,6 @@ exports.getByDate = async (req, res) => {
 
     return res.json({ data: currency });
   } catch (err) {
-    console.error("Error getting currency by date:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -45,7 +57,6 @@ exports.getAll = async (req, res) => {
     const currencies = await Currency.find();
     return res.json({ data: currencies });
   } catch (err) {
-    console.error("Error getting all currencies:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

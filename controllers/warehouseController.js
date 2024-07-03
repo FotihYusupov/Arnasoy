@@ -11,7 +11,7 @@ exports.getAll = async (req, res) => {
       let total = 0
       const products = await Products.find({ warehouse: warehouse._id, deleted: false, saled: false });
       for(product of products) {
-        total += product.amount
+        total += (product.amount * product.price)
         warehouse._doc.total = total
       }
     }

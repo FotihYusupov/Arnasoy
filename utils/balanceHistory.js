@@ -2,19 +2,28 @@ const Users = require("../models/User");
 const BalanceHistory = require("../models/BalanceHistory");
 const Currency = require("../models/Currency");
 
-module.exports = async (userId, amount, type, comment) => {
+module.exports = async (userId, amount, type, comment, historyType) => {
   try {
     const findUser = await Users.findById(userId);
     if (!findUser) {
       throw new Error("User Not Found!");
     }
-    const currentCurrency = await Currency.find({ date: new Date() });
+    const startOfDay = new Date(today.setUTCHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setUTCHours(23, 59, 59, 999));
+
+    const currentCurrency = await Currency.findOne({
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+    });
     const newHistory = new BalanceHistory({
       user: findUser._id,
       amount: amount,
       comment: comment,
       type: type,
-      currency: currentCurrency.length > 0 ? currentCurrency[0].current : "",
+      currency: currentCurrency ? currentCurrency.current : "",
+      historyType: historyType,
     });
     switch (type) {
       case 1:

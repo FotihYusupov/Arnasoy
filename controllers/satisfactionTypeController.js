@@ -11,12 +11,15 @@ exports.getAll = async (req, res) => {
 };
 
 exports.add = async (req, res) => {
+  console.log('hello');
   try {
     req.body.sum = parseInt(req.body.sum);
+    if(typeof req.body.sum !== Number) delete req.body.sum;
     const newType = new SatisfactionType({ ...req.body });
     await newType.save();
     return res.json(newType);
   } catch (err) {
+    console.log(err);
     return res.status(400).json(err);
   }
 };

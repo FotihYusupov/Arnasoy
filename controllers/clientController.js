@@ -87,6 +87,10 @@ const paginateItems = (items, query, route) => {
 exports.getAll = async (req, res) => {
   try {
     const clients = await Client.find({deleted: false}).populate("category", "group");
+    for(client of clients) {
+      const clientDept = await Dept.find({ paid: false, deleted: false, clients: client._id })
+      client._doc.balance = (client._doc.balance - clientDept.reduce((sum, dept) => sum + dept.sum, 0));
+    }
     const users = await User.find({deleted: false});
     const data = [...clients, ...users];
     const paginatedData = paginateItems(data, req.query, "clients")
@@ -99,6 +103,10 @@ exports.getAll = async (req, res) => {
 exports.getClients = async (req, res) => {
   try {
     const data = await paginate(Client, req.query, "clients", "category", "group");
+    for(client of data.data) {
+      const clientDept = await Dept.find({ paid: false, deleted: false, clients: client._id })
+      client._doc.balance = (client._doc.balance - clientDept.reduce((sum, dept) => sum + dept.sum, 0));
+    }
     return res.json(data);
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
@@ -206,6 +214,7 @@ exports.updateClientBalanceAndPayDebt = async (req, res) => {
       data: findClient,
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json(err);
   }
 };

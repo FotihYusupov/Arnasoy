@@ -5,8 +5,7 @@ const Client = require("../models/Client");
 const Users = require("../models/User");
 const Dept = require("../models/Debt");
 const TransferHistory = require("../models/TransferHistory");
-const pagination = require("../utils/pagination");
-const generateId = require("../utils/generateId");
+const { pagination, generateId } = require("../utils")
 const bot = require("../bot");
 
 exports.getAll = async (req, res) => {
@@ -21,7 +20,7 @@ exports.getAll = async (req, res) => {
 
 exports.getUniqueProducts = async (req, res) => {
   try {
-    if(!req.query.filter) req.query.filter = {};
+    if (!req.query.filter) req.query.filter = {};
     req.query.filter.saled = false;
     req.query.deleted = false;
     const data = await pagination(Products, req.query, "products", "parties");
@@ -64,6 +63,7 @@ exports.editPrice = async (req, res) => {
         });
       }
       findProduct.saledPrice = product.price;
+      if (product.marja) findProduct.marja = parseInt(product.marja);
       updatedProducts.push(findProduct);
     }
 
@@ -78,19 +78,21 @@ exports.editPrice = async (req, res) => {
   } catch (err) {
     return res.status(400).json(err);
   }
-}
+};
 
 exports.generateInvoice = async (req, res) => {
   try {
     const saleds = await SaledProducts.find();
-    const last = saleds[saleds.length - 1]
-    const invoice = last ? `inv-${parseInt(last.invoice ? last.invoice.split('-')[1] : 0) + 1}` : 'inv-1';
+    const last = saleds[saleds.length - 1];
+    const invoice = last
+      ? `inv-${parseInt(last.invoice ? last.invoice.split("-")[1] : 0) + 1}`
+      : "inv-1";
     return res.json({
       data: invoice,
     });
   } catch (err) {
     return res.status(400).json(err);
-  };
+  }
 };
 
 exports.getPrice = async (req, res) => {
@@ -165,18 +167,18 @@ exports.getPrice = async (req, res) => {
       }
     }
 
-    let total = 0
-    for(product of updatedProducts) {
+    let total = 0;
+    for (product of updatedProducts) {
       console.log(product.saledPrice * product.saledAmount);
-      total += product.saledPrice * product.saledAmount
+      total += product.saledPrice * product.saledAmount;
     }
     return res.json({
       total: total,
-    })
+    });
   } catch (err) {
     return res.status(400).json(err);
   }
-}
+};
 
 exports.SaleProduct = async (req, res) => {
   try {
@@ -190,6 +192,10 @@ exports.SaleProduct = async (req, res) => {
       if (!findProduct) {
         errors.push(`ID si ${product.id} bo'lgan mahsulot topilmadi`);
         continue;
+      } else if (findProduct.status === 5) {
+        return res.json({
+          message: "Mahsulot omborga yetib kelmagan!"
+        })
       }
       if (findProduct.amount > product.amount) {
         findProduct.saledAmount = product.amount;
@@ -210,7 +216,7 @@ exports.SaleProduct = async (req, res) => {
         findProduct.saledPrice = product.saledPrice;
         updatedProducts.push(findProduct);
         for (let i = 0; i < products.length; i++) {
-          let newProducts = await Products.find({ _id: { $nin: ids } });
+          let newProducts = await Products.find({ _id: { $nin: ids }, status: { $ne: 5 } });
           newProducts = [...new Set(newProducts.map((p) => p.name))].map(
             (name) => newProducts.find((p) => p.name === name)
           );
@@ -270,10 +276,10 @@ exports.SaleProduct = async (req, res) => {
       sum: req.body.totalSum,
     });
 
-    req.body.dept = true
+    req.body.dept = true;
     if (req.body.dept) {
       if (findClient.balance >= req.body.totalSum) {
-        findClient.balance = findClient.balance - req.body.totalSum;
+        findClient.balance = (findClient.balance - req.body.totalSum);
         await findClient.save();
       } else if (findClient.balance < req.body.totalSum) {
         findClient.balance = 0;
@@ -317,15 +323,12 @@ exports.SaleProduct = async (req, res) => {
     }
 
     const findUser = await Users.findById(req.headers.userId);
-    // Aktiv va o'chirilgan bot foydalanuvchilarni olish
     const users = await Users.find({ bot: true, deleted: false, active: true });
 
-    // Barcha bot foydalanuvchilarga xabar yuborish
     users.forEach((user) => {
       const messageText = `Sotib olingan mahsulotlar.\n id: ${saledProduct.id}\n foydalanuvchi: ${findUser.name} ${findUser.lastName}`;
       if (user.chatId) {
-        bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {
-        });
+        bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {});
       }
     });
 
@@ -343,11 +346,11 @@ exports.SaleProduct = async (req, res) => {
 exports.transfer = async (req, res) => {
   try {
     let { amount, warehouse, transportNumber } = req.body;
-    amount = parseInt(amount)
+    amount = parseInt(amount);
     const findProduct = await Products.findById(req.params.id);
-    if(amount > findProduct.amount) {
+    if (amount > findProduct.amount) {
       return res.status(400).json({
-        message: "t(Ko'chirish miqdori mahsuloq miqdoridan ko'p)"
+        message: "t(Ko'chirish miqdori mahsuloq miqdoridan ko'p)",
       });
     }
 
@@ -358,62 +361,61 @@ exports.transfer = async (req, res) => {
       transportNumber: transportNumber || "",
       amount: amount,
       oldParty: findProduct.parties,
+    });
 
-    })
-
-    if(findProduct.amount == amount) {
+    if (findProduct.amount == amount) {
       findProduct.history.push({
         warehouse: findProduct.warehouse,
         createdAt: new Date(),
       });
-      findProduct.warehouse = warehouse
+      findProduct.warehouse = warehouse;
       await findProduct.save();
     } else if (findProduct.amount > amount) {
-      findProduct.amount -= amount
+      findProduct.amount -= amount;
       await findProduct.save();
 
       const findParty = await Party.findById(findProduct.parties);
-      delete findParty._doc._id
+      delete findParty._doc._id;
       delete findParty._doc.products;
       findParty.warehouse = warehouse;
 
-      findProduct.saledAmount = 0
+      findProduct.saledAmount = 0;
       const products = await Products.find();
       findProduct.id = generateId(products);
       findProduct.warehouse = warehouse;
-      
-      const findCopied = await Products.findOne({ copy: findProduct._id })
-      if(findCopied) {
-        findCopied.amount += amount
+
+      const findCopied = await Products.findOne({ copy: findProduct._id });
+      if (findCopied) {
+        findCopied.amount += amount;
         await findCopied.save();
 
-        newHistory.newParty = findCopied.parties
+        newHistory.newParty = findCopied.parties;
         await newHistory.save();
       } else {
         const newParty = await Party.create({
-          ...findParty._doc
-        })
-        findProduct.parties = newParty._id
-        findProduct.amount = amount
-        const findProductId = findProduct._id
-        delete findProduct._doc._id
+          ...findParty._doc,
+        });
+        findProduct.parties = newParty._id;
+        findProduct.amount = amount;
+        const findProductId = findProduct._id;
+        delete findProduct._doc._id;
         const newProduct = new Products({
           ...findProduct._doc,
-          copy: findProductId
+          copy: findProductId,
         });
-  
-        newParty.products.push(newProduct._id)
+
+        newParty.products.push(newProduct._id);
         await newParty.save();
         await newProduct.save();
-      
-        newHistory.newParty = newParty._id
+
+        newHistory.newParty = newParty._id;
         await newHistory.save();
       }
     }
 
     return res.json({
-      message: "Success"
-    })
+      message: "Success",
+    });
   } catch (err) {
     return res.json(err);
   }

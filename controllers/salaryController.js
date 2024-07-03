@@ -17,17 +17,17 @@ cron.schedule(
     if (isLastDayOfMonth()) {
       try {
         const users = await User.find({ active: true, deleted: false });
-        // const totalSalary = users.reduce((total, user) => {
-        //   return total + (user.salary || 0);
-        // }, 0);
-        // console.log(`Total Salary: ${totalSalary}`);
         for (user of users) {
-          const salary = new Salary({
-            user: user._id,
-            salary: user.salary,
-            mouth: new Date().toLocaleString("default", { month: "long" }),
-          });
-          await salary.save();
+          if(user.salary !== 0) {
+            const salary = new Salary({
+              user: user._id,
+              salary: user.salary,
+              mouth: new Date().toLocaleString("default", { month: "long" }),
+            });
+            await salary.save();
+          } else {
+            continue
+          }
         }
       } catch (error) {
         console.error(
