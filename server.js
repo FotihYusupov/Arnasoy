@@ -20,4 +20,4 @@ app.use('/api', router);
 
 app.use('/uploads', express.static('uploads'))
 
-app.listen(process.env.PORT || 3001, () => console.log("server is run"));
+app.listen(process.env.PORT || 4002, () => console.log("server is run"));
