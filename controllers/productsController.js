@@ -181,6 +181,8 @@ exports.getPrice = async (req, res) => {
 exports.SaleProduct = async (req, res) => {
   try {
     const { products } = req.body;
+    const { client, warehouse, invoice, invoiceDate, comment, totalSum } = req.body;
+    const { userId } = req.headers
     const errors = [];
     const updatedProducts = [];
     const findClient = await Client.findById(req.body.client);
@@ -264,14 +266,14 @@ exports.SaleProduct = async (req, res) => {
     const saledProducts = await SaledProducts.find();
     const saledProduct = await SaledProducts.create({
       id: req.body.id ? req.body.id : generateId(saledProducts),
-      client: req.body.client,
-      warehouse: req.body.warehouse,
-      invoice: req.body.invoice,
-      invoiceDate: req.body.invoiceDate,
-      comment: req.body.comment,
-      user: req.headers.userId,
+      client: client,
+      warehouse: warehouse,
+      invoice: invoice,
+      invoiceDate: invoiceDate,
+      comment: comment,
+      user: userId,
       products: updatedProducts,
-      sum: req.body.totalSum,
+      sum: totalSum,
     });
 
     req.body.dept = true;
@@ -320,9 +322,9 @@ exports.SaleProduct = async (req, res) => {
       }
     }
 
-    await sendMessage("Tavar chiqimi", req.headers.userId)
+    await sendMessage("Tavar chiqimi", userId)
 
-    await sendMessageToClient(req.body.client)
+    await sendMessageToClient(client, "Tovar sotib olindi")
 
     return res.status(200).json({
       message: "Mahsulotlar muvaffaqiyatli sotildi",

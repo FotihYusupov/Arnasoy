@@ -8,6 +8,8 @@ module.exports = async (userId, amount, type, comment, historyType) => {
     if (!findUser) {
       throw new Error("User Not Found!");
     }
+
+    const today = new Date()
     const startOfDay = new Date(today.setUTCHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setUTCHours(23, 59, 59, 999));
 

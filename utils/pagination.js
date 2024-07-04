@@ -62,8 +62,6 @@ const paginate = async (model, query, route, ...populateFields) => {
     const totalCount = await model.countDocuments();
     const totalPages = Math.ceil(totalCount / perPage);
 
-
-
     return {
       data: populatedResults,
       _meta: {
