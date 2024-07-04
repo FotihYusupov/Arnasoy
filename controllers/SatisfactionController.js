@@ -146,11 +146,7 @@ exports.expenses = async (req, res) => {
       req.body.balanceType,
       req.body.price,
       "Oylik rasxod"
-    ).catch((err) => {
-      return res
-        .status(500)
-        .json({ error: "Balance update failed", message: err.message });
-    });
+    )
 
     await newExpense.save();
 

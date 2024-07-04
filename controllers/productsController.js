@@ -2,11 +2,9 @@ const Products = require("../models/Products");
 const SaledProducts = require("../models/saledProducts");
 const Party = require("../models/Party");
 const Client = require("../models/Client");
-const Users = require("../models/User");
 const Dept = require("../models/Debt");
 const TransferHistory = require("../models/TransferHistory");
-const { pagination, generateId } = require("../utils")
-const bot = require("../bot");
+const { pagination, generateId, sendMessage, sendMessageToClient } = require("../utils")
 
 exports.getAll = async (req, res) => {
   try {
@@ -322,15 +320,9 @@ exports.SaleProduct = async (req, res) => {
       }
     }
 
-    const findUser = await Users.findById(req.headers.userId);
-    const users = await Users.find({ bot: true, deleted: false, active: true });
+    await sendMessage("Tavar chiqimi", req.headers.userId)
 
-    users.forEach((user) => {
-      const messageText = `Sotib olingan mahsulotlar.\n id: ${saledProduct.id}\n foydalanuvchi: ${findUser.name} ${findUser.lastName}`;
-      if (user.chatId) {
-        bot.sendMessage(parseInt(user.chatId), messageText).catch((err) => {});
-      }
-    });
+    await sendMessageToClient(req.body.client)
 
     return res.status(200).json({
       message: "Mahsulotlar muvaffaqiyatli sotildi",

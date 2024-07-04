@@ -1,7 +1,6 @@
 const Dept = require("../models/Debt");
 const DeptHistory = require("../models/DeptHistory");
 const paginate = require("../utils/pagination");
-const { login } = require("./userController");
 
 exports.getById = async (req, res) => {
   try {

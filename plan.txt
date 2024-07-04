@@ -1,0 +1,11 @@
+05.07.2024
+1.Botni controllerlarda ulash...
+    1.Tavar chiqim qilganda.
+    2.Pul kirim qilganda.
+    3.Pul chiqim qilganda.
+
+08.07.2024
+2.Bot orqali tavar kirim va chiqimlarini qilish.
+
+10.07.2024
+3.Ishchiga oyni boshida oylik berilsa oyning oxirida xisbolamaslik.

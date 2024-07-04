@@ -8,35 +8,53 @@ module.exports = {
       balanceType = parseInt(balanceType);
       amount = parseInt(amount);
 
-      const user = await Users.findById(userId);
-      if (!user) {
+      const findUser = await Users.findById(userId);
+      if (!findUser) {
         throw new Error("User Not Found");
       }
 
       switch (balanceType) {
         case 1:
-          if (user.cashBalance < amount) {
+          let total = users.reduce((sum, user) => sum + user.cashBalance, 0)
+          if (total < amount) {
             throw new Error(
               "There are insufficient funds in the user's balance"
             );
           }
-          user.cashBalance -= amount;
+          if(findUser.cashBalance <= total) {
+            findUser.cashBalance = 0
+            total = (total - findUser.cashBalance)
+            const users = await Users.find()
+            for(user of users) {
+              if(total = 0) break;
+              if(user.cashBalance <= total) {
+                total = (total - user.cashBalance)
+                user.cashBalance = 0
+                await user.save()
+              } else if (user.cashBalance > total) {
+                user.cardBalance = (user.cashBalance - total)
+                await user.save()
+              }
+            }
+          } else {
+            findUser.cashBalance -= amount;
+          }
           break;
         case 2:
-          if (user.cardBalance < amount) {
+          if (findUser.cardBalance < amount) {
             throw new Error(
               "There are insufficient funds in the user's balance"
             );
           }
-          user.cardBalance -= amount;
+          findUser.cardBalance -= amount;
           break;
         case 3:
-          if (user.balance < amount) {
+          if (findUser.balance < amount) {
             throw new Error(
               "There are insufficient funds in the user's balance"
             );
           }
-          user.balance -= amount;
+          findUser.balance -= amount;
           break;
         default:
           throw new Error("Invalid balance type");
