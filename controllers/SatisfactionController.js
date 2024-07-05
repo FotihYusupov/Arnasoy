@@ -78,7 +78,9 @@ exports.addSatisfaction = async (req, res) => {
       req.headers.userId,
       req.body.balanceType,
       req.body.price,
-      "Partiya uchun Dop Rasxod"
+      "Partiya uchun Dop Rasxod",
+      req.headers.userId,
+      'users'
     );
 
     await newSatisfaction.save();
@@ -116,7 +118,9 @@ exports.addSatisfactionProduct = async (req, res) => {
       req.headers.userId,
       req.body.balanceType,
       req.body.price,
-      "Product uchun Dop Rasxod"
+      "Product uchun Dop Rasxod",
+      req.headers.userId,
+      'users'
     );
 
     new newSatisfaction.save()
@@ -145,7 +149,9 @@ exports.expenses = async (req, res) => {
       req.headers.userId,
       req.body.balanceType,
       req.body.price,
-      "Oylik rasxod"
+      "Oylik rasxod",
+      req.headers.userId,
+      'users'
     )
 
     await newExpense.save();
@@ -179,15 +185,19 @@ exports.updateSatisfaction = async (req, res) => {
       await updateBalance(
         req.headers.userId,
         req.body.balanceType,
-        (req.body.sum - findSatisfaction.sum,
-        "Partiya dop rasxod o'zgartirildi")
+        (req.body.sum - findSatisfaction.sum),
+        "Partiya dop rasxod o'zgartirildi",
+        req.headers.userId,
+        'users'
       );
     } else {
       await addBalance(
         req.headers.userId,
         req.body.balanceType,
-        (findSatisfaction.sum - req.body.sum,
-        "Partiya dop rasxod o'zgartirildi")
+        (findSatisfaction.sum - req.body.sum),
+        "Partiya dop rasxod o'zgartirildi",
+        req.headers.userId,
+        'users'
       );
     }
 
@@ -220,13 +230,19 @@ exports.updateExpenses = async (req, res) => {
       await updateBalance(
         req.headers.userId,
         req.body.balanceType,
-        (req.body.sum - findExpense.sum, "Oylik rasxod o'zgartirildi")
+        (req.body.sum - findExpense.sum),
+        "Oylik rasxod o'zgartirildi",
+        req.headers.userId,
+        'users'
       );
     } else {
       await addBalance(
         req.headers.userId,
         req.body.balanceType,
-        (findExpense.sum - req.body.sum, "Oylik rasxod o'zgartirildi")
+        (findExpense.sum - req.body.sum), 
+        "Oylik rasxod o'zgartirildi",
+        req.headers.userId,
+        'users'
       );
     }
 
@@ -250,7 +266,9 @@ exports.deleteExpense = async (req, res) => {
       req.headers.userId,
       findExpense.balanceType,
       findExpense.sum,
-      "Oylik rasxod bekor qilindi"
+      "Oylik rasxod bekor qilindi",
+      req.headers.userId,
+      'users'
     );
     return res.json({
       message: "Expense deleted!",

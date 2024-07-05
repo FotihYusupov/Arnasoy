@@ -2,7 +2,7 @@ const cron = require("node-cron");
 const Salary = require("../models/Salary");
 const User = require("../models/User");
 const paginate = require("../utils/pagination");
-const { addBalance, updateBalance } = require("../utils/updateBalance");
+const { updateBalance } = require("../utils/updateBalance");
 
 function isLastDayOfMonth() {
   const today = new Date();
@@ -93,7 +93,9 @@ exports.paySalary = async (req, res) => {
       req.headers.userId,
       req.body.balanceType,
       req.body.sum,
-      "Ishchilarga oylik berildi"
+      "Ishchilarga oylik berildi",
+      req.headers.userId,
+      'users'
     );
 
     for (updated of updates) {
@@ -120,7 +122,9 @@ exports.advanceSalary = async (req, res) => {
       req.headers.userId,
       balanceType,
       sum,
-      "Ishchilarga avans berildi"
+      "Ishchilarga avans berildi",
+      req.headers.userId,
+      'users'
     );
     await newSalary.save();
   } catch (err) {

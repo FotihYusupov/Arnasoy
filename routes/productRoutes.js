@@ -13,6 +13,7 @@ productRoutes.post("/sale", authMiddleware, productController.SaleProduct);
 
 productRoutes.put("/", authMiddleware, productController.editPrice);
 productRoutes.put("/transfer/:id", authMiddleware, productController.transfer);
+productRoutes.put("/destruction/:id", authMiddleware, productController.destruction)
 
 productRoutes.patch("/get-price", authMiddleware, productController.getPrice);
 

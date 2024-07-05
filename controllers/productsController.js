@@ -417,7 +417,7 @@ exports.transfer = async (req, res) => {
 
 exports.destruction = async (req, res) => {
   try {
-    const findProduct = await Products.findById(req.body.id);
+    const findProduct = await Products.findById(req.params.id);
     if (findProduct.amount == req.body.amount) {
       findProduct.deleted = true;
       findProduct.deletedAt = new Date();

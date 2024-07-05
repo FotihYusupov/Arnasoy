@@ -142,7 +142,8 @@ exports.addParty = async (req, res) => {
         warehouse: warehouse,
         dept: req.body.dept,
         parties: newParty._id,
-        status: status
+        status: status,
+        realPrice: findProductData._doc.price
       });
       await newProduct.save();
       productIds.push(newProduct._id);

@@ -2,7 +2,7 @@ const Users = require("../models/User");
 const BalanceHistory = require("../models/BalanceHistory");
 const Currency = require("../models/Currency");
 
-module.exports = async (userId, amount, type, comment, historyType) => {
+module.exports = async (userId, amount, type, comment, historyType, from, fromModel, to, toModel) => {
   try {
     const findUser = await Users.findById(userId);
     if (!findUser) {
@@ -26,6 +26,10 @@ module.exports = async (userId, amount, type, comment, historyType) => {
       type: type,
       currency: currentCurrency ? currentCurrency.current : "",
       historyType: historyType,
+      from,
+      fromModel,
+      to,
+      toModel
     });
     switch (type) {
       case 1:

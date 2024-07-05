@@ -7,7 +7,7 @@ const clientRoutes = Router();
 clientRoutes.get("/all", authMiddleware, clientController.getAll);
 clientRoutes.get("/", authMiddleware, clientController.getClients);
 clientRoutes.get("/invoice", clientController.generateInv);
-// clientRoutes.get("/:id", authMiddleware, clientController.byId);
+clientRoutes.get("/:id", authMiddleware, clientController.byId);
 
 clientRoutes.post("/", authMiddleware, clientController.addClient);
 

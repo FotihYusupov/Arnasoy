@@ -30,6 +30,9 @@ const ProductsSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    realPrice: {
+      type: Number,
+    },
     saled: {
       type: Boolean,
       default: false,

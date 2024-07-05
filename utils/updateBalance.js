@@ -2,7 +2,7 @@ const Users = require("../models/User");
 const balanceHistory = require("./balanceHistory");
 
 module.exports = {
-  updateBalance: async (userId, balanceType, amount, comment) => {
+  updateBalance: async (userId, balanceType, amount, comment, to, toModel) => {
     try {
       comment = comment ? comment : "";
       balanceType = parseInt(balanceType);
@@ -59,7 +59,7 @@ module.exports = {
         default:
           throw new Error("Invalid balance type");
       }
-      await balanceHistory(userId, amount, balanceType, comment, 1).catch(
+      await balanceHistory(userId, amount, balanceType, comment, 1, userId, 'users', to, toModel).catch(
         (err) => {
           throw new Error(err);
         }
@@ -71,7 +71,7 @@ module.exports = {
       throw new Error(err);
     }
   },
-  addBalance: async (userId, balanceType, amount, comment) => {
+  addBalance: async (userId, balanceType, amount, comment, from, fromModel) => {
     try {
       comment = comment ? comment : "";
       balanceType = parseInt(balanceType);
@@ -96,7 +96,7 @@ module.exports = {
           throw new Error("Invalid balance type");
       }
 
-      balanceHistory(userId, amount, balanceType, comment, 2);
+      balanceHistory(userId, amount, balanceType, comment, 2, from, fromModel, userId, 'users');
 
       await user.save();
       return "Balance added successfully";

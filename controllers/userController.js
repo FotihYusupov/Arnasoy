@@ -6,6 +6,8 @@ const { addBalance, updateBalance } = require("../utils/updateBalance");
 
 exports.getAllUsers = async (req, res) => {
   try {
+    if(!req.query.filter) req.query.filter = {}
+    req.query.filter.deleted = false
     const data = await paginate(User, req.query, 'users', 'role')
     return res.json(data);
   } catch (err) {
@@ -48,6 +50,8 @@ exports.getMe = async (req, res) => {
 exports.addUser = async (req, res) => {
   try {
     const users = await User.find();
+    if(req.body.bot == 2) req.body.bot = false
+    if(req.body.bot == 1) req.body.bot = true
     const newUser = new User({
       id: generateId(users),
       ...req.body,
@@ -93,8 +97,8 @@ exports.updateUser = async (req, res) => {
 exports.updateUserBalance = async (req, res) => {
   try {
     const { senderType, recipientType, sum, sender, recipient } = req.body;
-    await updateBalance(sender, senderType, sum, "Balansdan balancga pul otkazdik");
-    await addBalance(recipient, recipientType, sum, "Balansdan balancga pul otkazdik");
+    await updateBalance(sender, senderType, sum, "Balansdan balancga pul otkazdik", recipient, 'users');
+    await addBalance(recipient, recipientType, sum, "Balansdan balancga pul otkazdik", sender, 'users');
     return res.json({
       message: "Success"
     })

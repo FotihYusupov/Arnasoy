@@ -2,8 +2,9 @@ const Client = require("../models/Client");
 const User = require("../models/User");
 const Dept = require("../models/Debt");
 const DeptHistory = require("../models/DeptHistory");
-const generateId = require("../utils/generateId");
-const paginate = require("../utils/pagination");
+const BalanceHistory = require("../models/BalanceHistory");
+const SaledProducts = require("../models/saledProducts");
+const { generateId, pagination } = require("../utils");
 const { addBalance, updateBalance } = require("../utils/updateBalance");
 
 const URL = process.env.SERVER_URL;
@@ -86,7 +87,7 @@ const paginateItems = (items, query, route) => {
 
 exports.getAll = async (req, res) => {
   try {
-    const clients = await Client.find({deleted: false}).populate("category", "group");
+    const clients = await Client.find({ deleted: false }).populate("category", "group");
     for(client of clients) {
       const clientDept = await Dept.find({ paid: false, deleted: false, clients: client._id })
       client._doc.balance = (client._doc.balance - clientDept.reduce((sum, dept) => sum + dept.sum, 0));
@@ -102,7 +103,9 @@ exports.getAll = async (req, res) => {
 
 exports.getClients = async (req, res) => {
   try {
-    const data = await paginate(Client, req.query, "clients", "category", "group");
+    if(!req.query.filter) req.query.filter = {}
+    req.query.filter.deleted = false
+    const data = await pagination(Client, req.query, "clients", "category", "group");
     for(client of data.data) {
       const clientDept = await Dept.find({ paid: false, deleted: false, clients: client._id })
       client._doc.balance = (client._doc.balance - clientDept.reduce((sum, dept) => sum + dept.sum, 0));
@@ -115,14 +118,26 @@ exports.getClients = async (req, res) => {
 
 exports.byId = async (req, res) => {
   try {
-    const findClient = await Client.findById(req.params.id);
+    const clientId = req.params.id
+    const findClient = await Client.findById(clientId);
     if(!findClient) {
       return res.status(404).json({
         message: "Client Not Found!"
       })
     }
+
+    const income = await BalanceHistory.find({ from: clientId });
+    const outcome = await BalanceHistory.find({ to: clientId });
+
+    const saledProducts = await SaledProducts.find({ client: clientId, deleted: false });
+
     return res.json({
-      data: findClient,
+      data: {
+        data: findClient,
+        totalIncome: income.reduce((sum, history) => sum + history.amount, 0),
+        totalOutcome: outcome.reduce((sum, history) => sum + history.amount, 0),
+        saledProducts: saledProducts
+      }
     });
   } catch (err) {
     return res.status(400).json(err)
@@ -165,7 +180,7 @@ exports.updateClientBalanceAndPayDebt = async (req, res) => {
     const userId = req.headers.userId;
     const clientId = req.params.id;
 
-    await addBalance(userId, balanceType, sum, "Client qarzini berganda.");
+    await addBalance(userId, balanceType, sum, "Client qarzini berganda.", clientId, 'clients');
 
     const findClient = await Client.findById(clientId);
     if (!findClient) {
@@ -241,7 +256,9 @@ exports.moneyOut = async (req, res) => {
       req.headers.userId,
       balanceType,
       sum,
-      "Clientga qarzimizni berdik."
+      "Clientga qarzimizni berdik.",
+      req.params.id,
+      'clients'
     );
     findClient.indebtedness -= sum;
     await findClient.save();
