@@ -98,7 +98,6 @@ exports.getAll = async (req, res) => {
     const paginatedData = paginateItems(data, req.query, "clients")
     return res.json(paginatedData);
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -115,7 +114,6 @@ exports.getClients = async (req, res) => {
     }
     return res.json(data);
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -130,6 +128,8 @@ exports.byId = async (req, res) => {
       })
     }
 
+    const balanceHistory =  await BalanceHistory.find({ $or: [{ from: clientId }, { to: { $eq: clientId } }] })
+
     const income = await BalanceHistory.find({ from: clientId });
     const outcome = await BalanceHistory.find({ to: clientId });
 
@@ -140,7 +140,8 @@ exports.byId = async (req, res) => {
         data: findClient,
         totalIncome: income.reduce((sum, history) => sum + history.amount, 0),
         totalOutcome: outcome.reduce((sum, history) => sum + history.amount, 0),
-        saledProducts: saledProducts
+        saledProducts: saledProducts,
+        balanceHistory: balanceHistory
       }
     });
   } catch (err) {

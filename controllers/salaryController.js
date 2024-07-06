@@ -17,14 +17,31 @@ cron.schedule(
     if (isLastDayOfMonth()) {
       try {
         const users = await User.find({ active: true, deleted: false });
+
         for (user of users) {
           if(user.salary !== 0) {
-            const salary = new Salary({
-              user: user._id,
-              salary: user.salary,
-              mouth: new Date().toLocaleString("default", { month: "long" }),
+            const today = new Date()
+            const startOfDay = new Date(today.setUTCHours(0, 0, 0, 0));
+            const endOfDay = new Date(today.setUTCHours(23, 59, 59, 999));
+    
+            const currentSalary = await Salary.findOne({
+              mouth: {
+                $gte: startOfDay,
+                $lte: endOfDay,
+              },
+              user: user._doc._id
             });
-            await salary.save();
+
+            if(!currentSalary) {
+              const salary = new Salary({
+                user: user._id,
+                salary: user.salary,
+                mouth: new Date().toLocaleString("default", { month: "long" }),
+              });
+              await salary.save();
+            } else {
+              continue
+            }
           } else {
             continue
           }
@@ -45,11 +62,9 @@ cron.schedule(
 
 exports.getAll = async (req, res) => {
   try {
-    if (!req.query.filter) {
-      req.query.filter = {};
-    }
+    if (!req.query.filter) req.query.filter = {};
     req.query.filter.deleted = false;
-    const data = await paginate(Salary, req.query, "user");
+    const data = await paginate(Salary, req.query, "salaries", 'user'); 
     return res.json(data);
   } catch (err) {
     return res.json(err);
@@ -114,7 +129,7 @@ exports.advanceSalary = async (req, res) => {
     const newSalary = new Salary({
       salary: sum,
       user: req.params.id,
-      mouth: new Date().toLocaleString("default", { month: "long" }),
+      mouth: new Date(),
       paid: true,
       paidDate: new Date(),
     });

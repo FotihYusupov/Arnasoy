@@ -14,7 +14,7 @@ const SalarySchema = new mongoose.Schema(
       required: true,
     },
     paidDate: {
-      type: Number,
+      type: String,
     },
     user: {
       type: mongoose.Types.ObjectId,
