@@ -40,7 +40,7 @@ exports.getByDate = async (req, res) => {
       const lastCurrentCurrency = await Currency.findOne({ date: getYesterdayDate() })
       currency = new Currency({
         cb: cbData[0].Rate,
-        current: lastCurrentCurrency.current,
+        current: lastCurrentCurrency ? lastCurrentCurrency.current : cbData[0].Rate,
         date: currentDate,
       });
       await currency.save();
@@ -48,6 +48,7 @@ exports.getByDate = async (req, res) => {
 
     return res.json({ data: currency });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
