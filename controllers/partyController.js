@@ -167,6 +167,31 @@ exports.addParty = async (req, res) => {
   }
 };
 
+exports.copyParty = async (req, res) => {
+  try {
+    const findParty = await Party.findById(req.params.id).populate("products")
+    if(!findParty) {
+      return res.status(404).json({
+        message: "Party not found"
+      });
+    }
+    delete findParty._doc._id
+    delete findParty._doc.products
+    findParty._doc.products = []
+    const newParty = new Party({
+      ...findParty
+    })
+    for(product of products) {
+      
+    }
+  } catch (err) {
+    return res.status(400).json({
+      message: "Interval server error",
+      error: err.message
+    })
+  }
+}
+
 exports.updateParty = async (req, res) => {
   try {
     const findParty = await Party.findById(req.params.id);

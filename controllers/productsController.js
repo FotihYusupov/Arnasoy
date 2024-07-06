@@ -4,7 +4,12 @@ const Party = require("../models/Party");
 const Client = require("../models/Client");
 const Dept = require("../models/Debt");
 const TransferHistory = require("../models/TransferHistory");
-const { pagination, generateId, sendMessage, sendMessageToClient } = require("../utils")
+const {
+  pagination,
+  generateId,
+  sendMessage,
+  sendMessageToClient,
+} = require("../utils");
 
 exports.getAll = async (req, res) => {
   try {
@@ -181,8 +186,9 @@ exports.getPrice = async (req, res) => {
 exports.SaleProduct = async (req, res) => {
   try {
     const { products } = req.body;
-    const { client, warehouse, invoice, invoiceDate, comment, totalSum } = req.body;
-    const { userId } = req.headers
+    const { client, warehouse, invoice, invoiceDate, comment, totalSum } =
+      req.body;
+    const { userId } = req.headers;
     const errors = [];
     const updatedProducts = [];
     const findClient = await Client.findById(req.body.client);
@@ -194,8 +200,8 @@ exports.SaleProduct = async (req, res) => {
         continue;
       } else if (findProduct.status === 5) {
         return res.json({
-          message: "Mahsulot omborga yetib kelmagan!"
-        })
+          message: "Mahsulot omborga yetib kelmagan!",
+        });
       }
       if (findProduct.amount > product.amount) {
         findProduct.saledAmount = product.amount;
@@ -216,7 +222,10 @@ exports.SaleProduct = async (req, res) => {
         findProduct.saledPrice = product.saledPrice;
         updatedProducts.push(findProduct);
         for (let i = 0; i < products.length; i++) {
-          let newProducts = await Products.find({ _id: { $nin: ids }, status: { $ne: 5 } });
+          let newProducts = await Products.find({
+            _id: { $nin: ids },
+            status: { $ne: 5 },
+          });
           newProducts = [...new Set(newProducts.map((p) => p.name))].map(
             (name) => newProducts.find((p) => p.name === name)
           );
@@ -279,7 +288,7 @@ exports.SaleProduct = async (req, res) => {
     req.body.dept = true;
     if (req.body.dept) {
       if (findClient.balance >= req.body.totalSum) {
-        findClient.balance = (findClient.balance - req.body.totalSum);
+        findClient.balance = findClient.balance - req.body.totalSum;
         await findClient.save();
       } else if (findClient.balance < req.body.totalSum) {
         findClient.balance = 0;
@@ -322,9 +331,14 @@ exports.SaleProduct = async (req, res) => {
       }
     }
 
-    await sendMessage("Tavar chiqimi", userId)
+    await sendMessage(
+      `Tavar chiqimi.\n\nid: ${saledProduct.id},\ninvoice: ${saledProduct.invoice},\nClient: ${findClient.name, findClient.lastName},Summa: ${saledProduct.sum}`,
+      userId
+    );
+    
+    const totalDept = (await Dept.find({ deleted: false, paid: false, clients: client._doc._id })).reduce((sum, dept) => sum + dept.sum, 0);
 
-    await sendMessageToClient(client, "Tovar sotib olindi")
+    await sendMessageToClient(client._doc.chatId, `Tovar sotib olindi.\n\nTovar sotib olishdan oldin: ${totalDept - totalSum}\nTovar sotib olinganidan keyin: ${totalDept}`);
 
     return res.status(200).json({
       message: "Mahsulotlar muvaffaqiyatli sotildi",

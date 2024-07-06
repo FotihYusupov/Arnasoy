@@ -9,6 +9,10 @@ exports.getAllUsers = async (req, res) => {
     if(!req.query.filter) req.query.filter = {}
     req.query.filter.deleted = false
     const data = await paginate(User, req.query, 'users', 'role')
+    data.data.forEach(e => {
+      e._doc.active == true ? e._doc.active = 1 : e._doc.active = 2
+      e._doc.bot == true ? e._doc.bot = 1 : e._doc.bot = 2
+    })
     return res.json(data);
   } catch (err) {
     return res.status(500).json(err);
@@ -52,6 +56,8 @@ exports.addUser = async (req, res) => {
     const users = await User.find();
     if(req.body.bot == 2) req.body.bot = false
     if(req.body.bot == 1) req.body.bot = true
+    if(req.body.active == 2) req.body.bot = false
+    if(req.body.active == 1) req.body.bot = true
     const newUser = new User({
       id: generateId(users),
       ...req.body,
@@ -103,6 +109,7 @@ exports.updateUserBalance = async (req, res) => {
       message: "Success"
     })
   } catch (err) {
+    console.log(err);
     return res.json(err);
   }
 };

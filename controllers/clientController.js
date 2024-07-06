@@ -4,7 +4,7 @@ const Dept = require("../models/Debt");
 const DeptHistory = require("../models/DeptHistory");
 const BalanceHistory = require("../models/BalanceHistory");
 const SaledProducts = require("../models/saledProducts");
-const { generateId, pagination } = require("../utils");
+const { generateId, pagination, sendMessage, sendMessageToClient } = require("../utils");
 const { addBalance, updateBalance } = require("../utils/updateBalance");
 
 const URL = process.env.SERVER_URL;
@@ -91,12 +91,14 @@ exports.getAll = async (req, res) => {
     for(client of clients) {
       const clientDept = await Dept.find({ paid: false, deleted: false, clients: client._id })
       client._doc.balance = (client._doc.balance - clientDept.reduce((sum, dept) => sum + dept.sum, 0));
+      client._doc.bot == true ? client._doc.bot = 1 : client._doc.bot = 2
     }
     const users = await User.find({deleted: false});
     const data = [...clients, ...users];
     const paginatedData = paginateItems(data, req.query, "clients")
     return res.json(paginatedData);
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -109,9 +111,11 @@ exports.getClients = async (req, res) => {
     for(client of data.data) {
       const clientDept = await Dept.find({ paid: false, deleted: false, clients: client._id })
       client._doc.balance = (client._doc.balance - clientDept.reduce((sum, dept) => sum + dept.sum, 0));
+      client._doc.bot == true ? client._doc.bot = 1 : client._doc.bot = 2
     }
     return res.json(data);
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -147,6 +151,8 @@ exports.byId = async (req, res) => {
 exports.addClient = async (req, res) => {
   try {
     const clients = await Client.find();
+    if(req.body.bot == 2) req.body.bot = false
+    if(req.body.bot == 1) req.body.bot = true
     const newClient = new Client({
       id: generateId(clients),
       ...req.body,
@@ -154,6 +160,7 @@ exports.addClient = async (req, res) => {
     await newClient.save();
     return res.status(201).json({ data: newClient });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -189,7 +196,7 @@ exports.updateClientBalanceAndPayDebt = async (req, res) => {
 
     let remainingSum = parseInt(sum);
 
-    let debts = await Dept.find({ clients: clientId }).sort({ _id: 1 }); // Sort by _id to ensure paying off from oldest to newest
+    let debts = await Dept.find({ clients: clientId }).sort({ _id: 1 });
     const updatedDebts = [];
 
     for (let debt of debts) {
@@ -223,6 +230,10 @@ exports.updateClientBalanceAndPayDebt = async (req, res) => {
       createdDate: createdDate,
       comment: comment
     });
+
+    const totalDept = (await Dept.find({ deleted: false, paid: false, clients: client._doc._id })).reduce((sum, dept) => sum + dept.sum, 0);
+
+    await sendMessage(`Pul qabul qilindi.\n\nMijoz: ${findClient.name, findClient.lastName}\n Qabul qilingan summa: ${sum},\nQolgan qarzdorlik: ${totalDept}`)
 
     return res.json({
       message: "Client balance and debts updated successfully!",

@@ -15,16 +15,16 @@ module.exports = {
 
       switch (balanceType) {
         case 1:
+          const users = await Users.find()
           let total = users.reduce((sum, user) => sum + user.cashBalance, 0)
           if (total < amount) {
             throw new Error(
               "There are insufficient funds in the user's balance"
             );
           }
-          if(findUser.cashBalance <= total) {
+          if(findUser.cashBalance <= amount) {
             findUser.cashBalance = 0
             total = (total - findUser.cashBalance)
-            const users = await Users.find()
             for(user of users) {
               if(total = 0) break;
               if(user.cashBalance <= total) {
@@ -65,7 +65,7 @@ module.exports = {
         }
       );
 
-      await user.save();
+      await findUser.save();
       return "Balance updated successfully";
     } catch (err) {
       throw new Error(err);
@@ -81,7 +81,7 @@ module.exports = {
       if (!user) {
         throw new Error("User Not Found");
       }
-
+      console.log(balanceType);
       switch (balanceType) {
         case 1:
           user.cashBalance += amount;

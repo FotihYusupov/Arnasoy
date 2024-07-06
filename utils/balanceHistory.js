@@ -51,6 +51,7 @@ module.exports = async (userId, amount, type, comment, historyType, from, fromMo
         throw new Error("Invalid balance type");
     }
   } catch (err) {
+    console.log(err);
     throw new Error(err);
   }
 };

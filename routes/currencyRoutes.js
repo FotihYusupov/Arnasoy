@@ -5,7 +5,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 const currencyRoutes = Router();
 
 currencyRoutes.get("/", authMiddleware, currencyController.getAll);
-currencyRoutes.get("/today", authMiddleware, currencyController.getByDate);
+currencyRoutes.get("/today",  currencyController.getByDate);
 
 currencyRoutes.put("/", authMiddleware, currencyController.updateCurrency);
 
