@@ -124,11 +124,13 @@ exports.getPrice = async (req, res) => {
         updatedProducts.push(findProduct);
       } else if (findProduct.amount < product.amount) {
         findProduct.saledAmount = product.amount;
+        const ids = []
         let amount = product.amount - findProduct.amount;
         findProduct.amount = 0;
         findProduct.saled = true;
         findProduct.saledPrice = product.saledPrice;
         updatedProducts.push(findProduct);
+        ids.push(findProduct._id);
         for (let i = 0; i < products.length; i++) {
           let newProducts = await Products.find({ _id: { $nin: ids } });
           newProducts = [...new Set(newProducts.map((p) => p.name))].map(
@@ -216,16 +218,15 @@ exports.SaleProduct = async (req, res) => {
         updatedProducts.push(findProduct);
       } else if (findProduct.amount < product.amount) {
         findProduct.saledAmount = product.amount;
+        const ids = []
         let amount = product.amount - findProduct.amount;
         findProduct.amount = 0;
         findProduct.saled = true;
         findProduct.saledPrice = product.saledPrice;
         updatedProducts.push(findProduct);
-        for (let i = 0; i < products.length; i++) {
-          let newProducts = await Products.find({
-            _id: { $nin: ids },
-            status: { $ne: 5 },
-          });
+        ids.push(findProduct._id);
+        for (let i = 0; i < ids.length; i++) {
+          let newProducts = await Products.find({ _id: { $nin: ids } });
           newProducts = [...new Set(newProducts.map((p) => p.name))].map(
             (name) => newProducts.find((p) => p.name === name)
           );
@@ -247,7 +248,7 @@ exports.SaleProduct = async (req, res) => {
               newFindProduct.saledPrice = product.saledPrice;
               updatedProducts.push(newFindProduct);
             } else if (newFindProduct.amount < amount) {
-              newFindProduct.saledAmount = newFindProduct.amount;
+              newFindProduct.saledAmount = amount;
               amount = amount - newFindProduct.amount;
               newFindProduct.amount = 0;
               newFindProduct.saled = true;
@@ -260,6 +261,7 @@ exports.SaleProduct = async (req, res) => {
             break;
           }
         }
+
       } else {
         errors.push(`Mahsulot ID si ${product.id} uchun yetarli miqdor yo'q`);
       }
@@ -336,14 +338,15 @@ exports.SaleProduct = async (req, res) => {
       userId
     );
     
-    const totalDept = (await Dept.find({ deleted: false, paid: false, clients: client._doc._id })).reduce((sum, dept) => sum + dept.sum, 0);
+    const totalDept = (await Dept.find({ deleted: false, paid: false, clients: client })).reduce((sum, dept) => sum + dept.sum, 0);
 
-    await sendMessageToClient(client._doc.chatId, `Tovar sotib olindi.\n\nTovar sotib olishdan oldin: ${totalDept - totalSum}\nTovar sotib olinganidan keyin: ${totalDept}`);
+    await sendMessageToClient(client, `Tovar sotib olindi.\n\nTovar sotib olishdan oldin: ${totalDept - totalSum}\nTovar sotib olinganidan keyin: ${totalDept}`);
 
     return res.status(200).json({
       message: "Mahsulotlar muvaffaqiyatli sotildi",
     });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       message: "Ichki server xatosi",
       error: err.message,
